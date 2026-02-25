@@ -27,3 +27,8 @@ flutter:
     - assets/logo.png
     - assets/profile_picture.jpg
 
+fonts:
+  - family: Doto
+    fonts:
+      - asset: assets/fonts/Doto-SemiBold.ttf
+        weight: 600

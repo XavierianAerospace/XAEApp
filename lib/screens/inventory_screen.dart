@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'qr_scanner_screen.dart';
+import '../qr_scanner_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   @override
@@ -14,13 +14,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
   ];
 
   final List<Map<String, dynamic>> dummyRegisteredItems = [
-    {'nombre': 'Pieza 1', 'codigo': 'PZ001', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2024, 12, 10), 'cantidad': 2},
-    {'nombre': 'Pieza 2', 'codigo': 'PZ002', 'apartadoPor': 'María López', 'fecha': DateTime(2024, 12, 12), 'cantidad': 1},
-    {'nombre': 'Pieza 3', 'codigo': 'PZ003', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2024, 12, 13), 'cantidad': 3},
+    {'nombre': 'Pieza 1', 'codigo': 'PZ001', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2026, 12, 10), 'cantidad': 2},
+    {'nombre': 'Pieza 2', 'codigo': 'PZ002', 'apartadoPor': 'María López', 'fecha': DateTime(2026, 12, 12), 'cantidad': 1},
+    {'nombre': 'Pieza 3', 'codigo': 'PZ003', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2026  , 12, 13), 'cantidad': 3},
   ];
 
-  String searchQueryLista = ''; // Nueva variable para el buscador de "Lista"
-  String searchQuery = ''; // Variable existente para "Registrados"
+  String searchQueryLista = '';
+  String searchQuery = '';
   String? selectedIntegrante;
   bool isViewingRegistered = false;
 
@@ -39,18 +39,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xff0a0a0f),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xff0a0a0f),
         elevation: 0,
         title: Padding(
-          padding: EdgeInsets.only(top: 35.0), // Ajusta el padding superior
+          padding: EdgeInsets.only(top: 35.0),
           child: Text(
             'Gestión de Piezas',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Color(0xffffffff),
             ),
             textAlign: TextAlign.center,
           ),
@@ -58,12 +58,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0), // Padding global para ambos buscadores
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
             // Botones de Lista y Registrados
             Padding(
-              padding: EdgeInsets.only(top: 45.0), // Padding superior restaurado
+              padding: EdgeInsets.only(top: 45.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -74,24 +74,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             SizedBox(height: 20),
 
-            // Mostrar el buscador exclusivo para "Lista"
+            // Mostrar el buscador exclusivo para lista
             if (!isViewingRegistered)
               TextField(
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Color(0xffffffff)),
                 decoration: InputDecoration(
                   hintText: 'Buscar por nombre de pieza...',
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(color: Color(0xffaaaaaa)),
                   filled: true,
-                  fillColor: Colors.grey[800],
+                  fillColor: Color(0xff1a1a2e),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(color: Color(0xff00ffff)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(color: Color(0xff00ffff), width: 2),
                   ),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                  prefixIcon: Icon(Icons.search, color: Colors.white),
+                  prefixIcon: Icon(Icons.search, color: Color(0xff00ffff)),
                 ),
                 onChanged: (value) {
                   setState(() {
-                    searchQueryLista = value; // Actualizar búsqueda de "Lista"
+                    searchQueryLista = value;
                   });
                 },
               ),
@@ -103,17 +108,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   // Buscador de texto para "Registrados"
                   Expanded(
                     child: TextField(
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Color(0xffffffff)),
                       decoration: InputDecoration(
                         hintText: 'Buscar por nombre de pieza...',
-                        hintStyle: TextStyle(color: Colors.grey),
+                        hintStyle: TextStyle(color: Color(0xffaaaaaa)),
                         filled: true,
-                        fillColor: Colors.grey[800],
+                        fillColor: Color(0xff1a1a2e),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide(color: Color(0xff00ffff)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide(color: Color(0xff00ffff), width: 2),
                         ),
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        prefixIcon: Icon(Icons.search, color: Colors.white), // Icono de lupa agregado
+                        prefixIcon: Icon(Icons.search, color: Color(0xff00ffff)),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -127,9 +137,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   // Dropdown para seleccionar integrante
                   DropdownButton<String>(
                     value: selectedIntegrante,
-                    hint: Text('Integrante', style: TextStyle(color: Colors.grey)),
-                    dropdownColor: Colors.black,
-                    style: TextStyle(color: Colors.white),
+                    hint: Text('Integrante', style: TextStyle(color: Color(0xffaaaaaa))),
+                    dropdownColor: Color(0xff1a1a2e),
+                    style: TextStyle(color: Color(0xffffffff)),
                     items: [
                       ...dummyRegisteredItems
                           .map((item) => item['apartadoPor'])
@@ -161,11 +171,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   return ListTile(
                     title: Text(
                       '${item['nombre']} (${item['codigo']})',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Color(0xffffffff)),
                     ),
                     subtitle: Text(
                       '${item['apartadoPor']}',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Color(0xffaaaaaa)),
                     ),
                     onTap: () => _showRegisteredItemDetails(context, item),
                   );
@@ -176,10 +186,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 itemBuilder: (context, index) {
                   final item = filteredScannedItems[index];
                   return ListTile(
-                    title: Text(item['nombre'], style: TextStyle(color: Colors.white)),
+                    title: Text(item['nombre'], style: TextStyle(color: Color(0xffffffff))),
                     subtitle: Text(
                       'Cantidad disponible: ${item['cantidad']}',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Color(0xffaaaaaa)),
                     ),
                     onTap: () => _showAvailableItemDetails(context, item),
                   );
@@ -190,11 +200,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
       ),
 
-      // Botón flotante para escanear QR
+      // Boton floating para escanear QR
       floatingActionButton: FloatingActionButton(
-        onPressed: _openQrScanner, // Llama a la función creada
-        backgroundColor: Colors.white,
-        child: Icon(Icons.qr_code, color: Colors.black),
+        onPressed: _openQrScanner,
+        backgroundColor: Color(0xff00ffff), // COlor primario cyan
+        child: Icon(Icons.qr_code, color: Color(0xff0a0a0f)),
       ),
     );
   }
@@ -204,7 +214,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final isSelected = isViewingRegistered == viewRegistered;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.white : Colors.red, // Cambiar el color del botón activo
+        backgroundColor: isSelected ? Color(0xff00ffff) : Color(0xffffaa00), // Cyan activo, amarillo inactivo
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       ),
       onPressed: () {
@@ -216,7 +226,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       },
       child: Text(
         text,
-        style: TextStyle(color: isSelected ? Colors.black : Colors.white), // Cambiar el color del texto
+        style: TextStyle(color: Color(0xff0a0a0f)), // Texto oscuro sobre botón claro
       ),
     );
   }
@@ -224,12 +234,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   // Mostrar detalles de un ítem disponible
   void _showAvailableItemDetails(BuildContext context, Map<String, dynamic> item) {
     final int piezasOcupadas = dummyRegisteredItems
-        .where((e) => e['nombre'] == item['nombre']) // Buscar coincidencias por nombre
-        .fold<int>(0, (sum, e) => sum + (e['cantidad'] as int)); // Sumar cantidades ocupadas
+        .where((e) => e['nombre'] == item['nombre'])
+        .fold<int>(0, (sum, e) => sum + (e['cantidad'] as int));
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xff1a1a2e), // Fondo de tarjetas
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
@@ -242,12 +252,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
             children: [
               Text(
                 'Detalles del Ítem Disponible',
-                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(color: Color(0xff00ffff), fontWeight: FontWeight.bold, fontSize: 18),
               ),
               SizedBox(height: 10),
-              Text('Nombre: ${item['nombre']}', style: TextStyle(color: Colors.white)),
-              Text('Cantidad disponible: ${item['cantidad']}', style: TextStyle(color: Colors.white)),
-              Text('Piezas ocupadas: $piezasOcupadas', style: TextStyle(color: Colors.white)),
+              Text('Nombre: ${item['nombre']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Cantidad disponible: ${item['cantidad']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Piezas ocupadas: $piezasOcupadas', style: TextStyle(color: Color(0xffffffff))),
             ],
           ),
         );
@@ -259,7 +269,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void _showRegisteredItemDetails(BuildContext context, Map<String, dynamic> item) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xff1a1a2e),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
@@ -270,13 +280,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Detalles del Ítem Registrado', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              Text('Detalles del Ítem Registrado', style: TextStyle(color: Color(0xff00ffff), fontWeight: FontWeight.bold)),
               SizedBox(height: 10),
-              Text('Nombre: ${item['nombre']}', style: TextStyle(color: Colors.white)),
-              Text('Código: ${item['codigo']}', style: TextStyle(color: Colors.white)),
-              Text('Apartado por: ${item['apartadoPor']}', style: TextStyle(color: Colors.white)),
-              Text('Fecha de apartado: ${item['fecha']}', style: TextStyle(color: Colors.white)),
-              Text('Cantidad apartada: ${item['cantidad']}', style: TextStyle(color: Colors.white)),
+              Text('Nombre: ${item['nombre']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Código: ${item['codigo']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Apartado por: ${item['apartadoPor']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Fecha de apartado: ${item['fecha']}', style: TextStyle(color: Color(0xffffffff))),
+              Text('Cantidad apartada: ${item['cantidad']}', style: TextStyle(color: Color(0xffffffff))),
             ],
           ),
         );
@@ -288,7 +298,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QRScannerScreen(), // Importa la pantalla QRScannerScreen
+        builder: (context) => QRScannerScreen(),
       ),
     );
   }
