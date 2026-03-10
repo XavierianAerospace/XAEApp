@@ -1,41 +1,69 @@
 import 'package:flutter/material.dart';
+import 'data/api_service.dart';
 import 'qr_scanner_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
+  final ApiService apiService;
+
+  InventoryScreen({required this.apiService});
+
   @override
   _InventoryScreenState createState() => _InventoryScreenState();
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  final List<Map<String, dynamic>> dummyScannedItems = [
-    {'nombre': 'Pieza 1', 'cantidad': 10},
-    {'nombre': 'Pieza 2', 'cantidad': 5},
-    {'nombre': 'Pieza 3', 'cantidad': 7},
-  ];
+  List<Map<String, dynamic>> _scannedItems = [];
+  List<Map<String, dynamic>> _registeredItems = [];
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> dummyRegisteredItems = [
-    {'nombre': 'Pieza 1', 'codigo': 'PZ001', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2024, 12, 10), 'cantidad': 2},
-    {'nombre': 'Pieza 2', 'codigo': 'PZ002', 'apartadoPor': 'María López', 'fecha': DateTime(2024, 12, 12), 'cantidad': 1},
-    {'nombre': 'Pieza 3', 'codigo': 'PZ003', 'apartadoPor': 'Juan Pérez', 'fecha': DateTime(2024, 12, 13), 'cantidad': 3},
-  ];
-
-  String searchQueryLista = ''; // Nueva variable para el buscador de "Lista"
-  String searchQuery = ''; // Variable existente para "Registrados"
+  String searchQueryLista = '';
+  String searchQuery = '';
   String? selectedIntegrante;
   bool isViewingRegistered = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final items = await widget.apiService.getItems();
+      final registered = await widget.apiService.getRegisteredItems();
+
+      setState(() {
+        _scannedItems = items;
+        _registeredItems = registered;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando inventario: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.red)),
+      );
+    }
+
     // Filtrar piezas por nombre en lista
-    final filteredScannedItems = dummyScannedItems
-        .where((item) => item['nombre'].toLowerCase().contains(searchQueryLista.toLowerCase()))
+    final filteredScannedItems = _scannedItems
+        .where((item) => (item['nombre'] as String).toLowerCase().contains(searchQueryLista.toLowerCase()))
         .toList();
 
     // Filtrar piezas por nombre en registradas
-    final filteredRegisteredItems = dummyRegisteredItems
+    final filteredRegisteredItems = _registeredItems
         .where((item) =>
     (selectedIntegrante == null || item['apartadoPor'] == selectedIntegrante) &&
-        item['nombre'].toLowerCase().contains(searchQuery.toLowerCase()))
+        (item['nombre'] as String).toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     return Scaffold(
@@ -44,7 +72,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         backgroundColor: Colors.black,
         elevation: 0,
         title: Padding(
-          padding: EdgeInsets.only(top: 35.0), // Ajusta el padding superior
+          padding: EdgeInsets.only(top: 35.0),
           child: Text(
             'Gestión de Piezas',
             style: TextStyle(
@@ -58,12 +86,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0), // Padding global para ambos buscadores
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
             // Botones de Lista y Registrados
             Padding(
-              padding: EdgeInsets.only(top: 45.0), // Padding superior restaurado
+              padding: EdgeInsets.only(top: 45.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -91,7 +119,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    searchQueryLista = value; // Actualizar búsqueda de "Lista"
+                    searchQueryLista = value;
                   });
                 },
               ),
@@ -113,7 +141,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        prefixIcon: Icon(Icons.search, color: Colors.white), // Icono de lupa agregado
+                        prefixIcon: Icon(Icons.search, color: Colors.white),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -131,8 +159,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     dropdownColor: Colors.black,
                     style: TextStyle(color: Colors.white),
                     items: [
-                      ...dummyRegisteredItems
-                          .map((item) => item['apartadoPor'])
+                      ..._registeredItems
+                          .map((item) => item['apartadoPor'] as String)
                           .toSet()
                           .map((integrante) {
                         return DropdownMenuItem<String>(
@@ -192,7 +220,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
       // Botón flotante para escanear QR
       floatingActionButton: FloatingActionButton(
-        onPressed: _openQrScanner, // Llama a la función creada
+        onPressed: _openQrScanner,
         backgroundColor: Colors.white,
         child: Icon(Icons.qr_code, color: Colors.black),
       ),
@@ -204,7 +232,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final isSelected = isViewingRegistered == viewRegistered;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.white : Colors.red, // Cambiar el color del botón activo
+        backgroundColor: isSelected ? Colors.white : Colors.red,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       ),
       onPressed: () {
@@ -216,16 +244,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
       },
       child: Text(
         text,
-        style: TextStyle(color: isSelected ? Colors.black : Colors.white), // Cambiar el color del texto
+        style: TextStyle(color: isSelected ? Colors.black : Colors.white),
       ),
     );
   }
 
   // Mostrar detalles de un ítem disponible
   void _showAvailableItemDetails(BuildContext context, Map<String, dynamic> item) {
-    final int piezasOcupadas = dummyRegisteredItems
-        .where((e) => e['nombre'] == item['nombre']) // Buscar coincidencias por nombre
-        .fold<int>(0, (sum, e) => sum + (e['cantidad'] as int)); // Sumar cantidades ocupadas
+    final int piezasOcupadas = _registeredItems
+        .where((e) => e['nombre'] == item['nombre'])
+        .fold<int>(0, (sum, e) => sum + (e['cantidad'] as int));
 
     showModalBottomSheet(
       context: context,
@@ -288,7 +316,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QRScannerScreen(), // Importa la pantalla QRScannerScreen
+        builder: (context) => QRScannerScreen(),
       ),
     );
   }
