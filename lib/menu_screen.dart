@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'data/api_service.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'inventory_screen.dart';
 import 'pending_screen.dart';
 
 class MenuScreen extends StatefulWidget {
+  final ApiService apiService;
+  final int userId;
+
+  MenuScreen({required this.apiService, required this.userId});
+
   @override
   _MenuScreenState createState() => _MenuScreenState();
 }
@@ -12,13 +18,18 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   int _currentIndex = 0;
 
-  // Lista de pantallas con la pantalla de inicio como primera opción
-  final List<Widget> _screens = [
-    HomeScreen(),         // Pantalla de inicio
-    PendingScreen(),      // Pantalla de pendientes
-    InventoryScreen(),    // Pantalla de inventario
-    ProfileScreen(),      // Pantalla de perfil
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(apiService: widget.apiService),
+      PendingScreen(apiService: widget.apiService, userId: widget.userId),
+      InventoryScreen(apiService: widget.apiService),
+      ProfileScreen(apiService: widget.apiService, userId: widget.userId),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
