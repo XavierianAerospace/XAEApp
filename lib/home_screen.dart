@@ -1,53 +1,57 @@
 import 'package:flutter/material.dart';
+import 'data/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  final ApiService apiService;
+
+  HomeScreen({required this.apiService});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Simulación de datos
-  final Map<String, List<Map<String, dynamic>>> tareasPorSubsistema = {
-    'Logística': [
-      {'titulo': 'Organizar inventario', 'urgencia': '!', 'fecha': DateTime(2024, 12, 10)},
-      {'titulo': 'Gestionar transporte', 'urgencia': '!!', 'fecha': DateTime(2024, 12, 15)},
-    ],
-    'Mecánica': [
-      {'titulo': 'Montar estructura', 'urgencia': '!!', 'fecha': DateTime(2024, 12, 7)},
-      {'titulo': 'Ajustar motores', 'urgencia': '!!!', 'fecha': DateTime(2024, 12, 12)},
-    ],
-    'Estrategia': [
-      {'titulo': 'Definir estrategia de juego', 'urgencia': '!!!', 'fecha': DateTime(2024, 12, 9)},
-      {'titulo': 'Preparar presentaciones', 'urgencia': '!', 'fecha': DateTime(2024, 12, 14)},
-    ],
-    'Programación': [
-      {'titulo': 'Depurar código', 'urgencia': '!!!', 'fecha': DateTime(2024, 12, 8)},
-      {'titulo': 'Integrar sensores', 'urgencia': '!', 'fecha': DateTime(2024, 12, 13)},
-    ],
-    'Drivers': [
-      {'titulo': 'Practicar maniobras', 'urgencia': '!!', 'fecha': DateTime(2024, 12, 6)},
-      {'titulo': 'Ajustar controles', 'urgencia': '!!!', 'fecha': DateTime(2024, 12, 10)},
-    ],
-    'Redes Sociales': [
-      {'titulo': 'Publicar contenido', 'urgencia': '!', 'fecha': DateTime(2024, 12, 7)},
-      {'titulo': 'Planificar campañas', 'urgencia': '!!', 'fecha': DateTime(2024, 12, 14)},
-    ],
-  };
+  List<Map<String, dynamic>> _allTasks = [];
+  List<String> _miembrosActivos = [];
+  bool _isLoading = true;
 
-  // Lista de miembros activos
-  final List<String> miembrosActivos = [
-    'Juan Pérez',
-    'María López',
-    'Carlos García',
-    'Ana Torres',
-    'Santiago Castro',
-    'Diana Rodríguez',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final tasks = await widget.apiService.getTasks();
+      final members = await widget.apiService.getMembers();
+
+      setState(() {
+        _allTasks = tasks;
+        _miembrosActivos = members
+            .where((m) => m['activo'] == true)
+            .map<String>((m) => m['nombre'] as String)
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando datos del home: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Calcular el número total de tareas pendientes
-    final totalTareasPendientes = tareasPorSubsistema.values.expand((tareas) => tareas).length;
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.red)),
+      );
+    }
+
+    final totalTareasPendientes = _allTasks.length;
 
     return Scaffold(
       backgroundColor: Colors.black, // Fondo negro
@@ -75,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Logo centrado en grande
               Center(
                 child: Image.asset(
-                  'assets/logo.png', // Cambia esta ruta si es necesario
+                  'assets/logo.png',
                   height: 200,
                 ),
               ),
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold, // Negrita
+                    fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -114,18 +118,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 padding: EdgeInsets.all(12.0),
                 child: ListView.builder(
-                  shrinkWrap: true, // Permitir que la lista se ajuste a su contenido
-                  physics: NeverScrollableScrollPhysics(), // Deshabilitar el scroll dentro del contenedor
-                  itemCount: miembrosActivos.length,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: _miembrosActivos.length,
                   itemBuilder: (context, index) {
                     return ListTile(
                       leading: CircleAvatar(
                         radius: 8,
-                        backgroundColor: Colors.green, // Círculo verde
+                        backgroundColor: Colors.green,
                       ),
                       title: Text(
-                        miembrosActivos[index],
-                        style: TextStyle(color: Colors.black), // Cambiar texto a negro
+                        _miembrosActivos[index],
+                        style: TextStyle(color: Colors.black),
                       ),
                     );
                   },
