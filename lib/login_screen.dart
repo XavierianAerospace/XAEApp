@@ -1,32 +1,33 @@
 import 'package:flutter/material.dart';
+import 'data/api_service.dart';
 import 'menu_screen.dart';
 
 class LoginScreen extends StatelessWidget {
+  final ApiService apiService;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login(BuildContext context) {
+  LoginScreen({required this.apiService});
+
+  void _login(BuildContext context) async {
     final email = _emailController.text;
     final password = _passwordController.text;
 
-    // Simulación de autenticación con verificación de correo
-    if (email == 'prueba@correo.com' && password == '1') {
-      // Aquí simulamos que el correo está verificado
-      final isEmailVerified = true;
+    // Llamada al API para autenticación
+    final user = await apiService.login(email, password);
 
-      if (isEmailVerified) {
-        // Navega a la pantalla de inicio si el correo está verificado
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MenuScreen()), // Pantalla principal
-        );
-      // ignore: dead_code
-      } else {
-        // Muestra un mensaje si el correo no está verificado
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Por favor, verifica tu correo electrónico.')),
-        );
-      }
+    if (user != null) {
+      final int userId = user['id'] is int ? user['id'] : int.parse(user['id'].toString());
+      // Navega a la pantalla de inicio si las credenciales son correctas
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MenuScreen(
+            apiService: apiService,
+            userId: userId,
+          ),
+        ),
+      );
     } else {
       // Muestra un mensaje si las credenciales son incorrectas
       ScaffoldMessenger.of(context).showSnackBar(
