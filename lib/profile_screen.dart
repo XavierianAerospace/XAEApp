@@ -1,40 +1,53 @@
 import 'package:flutter/material.dart';
+import 'data/api_service.dart';
 import 'add_hours_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
+  final ApiService apiService;
+  final int userId;
+
+  ProfileScreen({required this.apiService, required this.userId});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final Map<String, dynamic> dummyData = {
-    'nombre': 'Santiago',
-    'apellidos': 'Castro Zuluaga',
-    'fechaUnion': '10/04/2024',
-    'rango': 'VRC',
-    'tareasCompletadas': 35,
-    'tareasCreadas': 20,
-    'horasTrabajadas': 120,
-    'subsistemas': ['Logística', 'Estrategia', 'Drivers'],
-    'liderSubsistema': 'Logística',
-  };
+  Map<String, dynamic> _userData = {};
+  List<String> _allSubsistemas = [];
+  bool _isLoading = true;
+  bool isActive = false;
 
-  final List<String> allSubsistemas = [
-    'Logística',
-    'Mecánica',
-    'Programación',
-    'Estrategia',
-    'Drivers',
-    'Redes Sociales',
-    'Junta',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-  bool isActive = false; // Estado del perfil: activo o no
+  Future<void> _loadData() async {
+    try {
+      final user = await widget.apiService.getUser(widget.userId);
+      final subsistemas = await widget.apiService.getSubsistemas();
+
+      setState(() {
+        _userData = user;
+        _allSubsistemas = subsistemas
+            .map<String>((s) => s['nombre'] as String)
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando perfil: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _showEditModal(BuildContext context) {
-    TextEditingController nameController = TextEditingController(text: dummyData['nombre']);
-    TextEditingController lastNameController = TextEditingController(text: dummyData['apellidos']);
-    List<String> selectedSubsistemas = List<String>.from(dummyData['subsistemas']);
+    TextEditingController nameController = TextEditingController(text: _userData['nombre']);
+    TextEditingController lastNameController = TextEditingController(text: _userData['apellidos']);
+    List<String> selectedSubsistemas = List<String>.from(_userData['subsistemas'] ?? []);
 
     showModalBottomSheet(
       context: context,
@@ -103,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: allSubsistemas.map((subsistema) {
+                    children: _allSubsistemas.map((subsistema) {
                       final isSelected = selectedSubsistemas.contains(subsistema);
                       return FilterChip(
                         label: Text(
@@ -129,12 +142,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        dummyData['nombre'] = nameController.text;
-                        dummyData['apellidos'] = lastNameController.text;
-                        dummyData['subsistemas'] = selectedSubsistemas;
-                      });
+                    onPressed: () async {
+                      // Actualizar en el servidor
+                      final updatedData = Map<String, dynamic>.from(_userData);
+                      updatedData['nombre'] = nameController.text;
+                      updatedData['apellidos'] = lastNameController.text;
+                      updatedData['subsistemas'] = selectedSubsistemas;
+
+                      try {
+                        final result = await widget.apiService.updateUser(
+                          widget.userId,
+                          updatedData,
+                        );
+                        setState(() {
+                          _userData = result;
+                        });
+                      } catch (e) {
+                        print('Error al guardar perfil: $e');
+                      }
+
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -166,6 +192,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.red)),
+      );
+    }
+
+    // Obtener las tareas completadas por subsistema
+    final Map<String, dynamic> tareasCompletadasPorSubsistema =
+        Map<String, dynamic>.from(_userData['tareasCompletadasPorSubsistema'] ?? {});
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -200,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: isActive ? Colors.green : Colors.grey[400], // Verde si está activo, gris claro si no
+                      color: isActive ? Colors.green : Colors.grey[400],
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -220,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Column(
                     children: [
                       Text(
-                        dummyData['nombre'] ?? 'Nombre desconocido',
+                        _userData['nombre'] ?? 'Nombre desconocido',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -228,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       Text(
-                        dummyData['apellidos'] ?? 'Apellidos desconocidos',
+                        _userData['apellidos'] ?? 'Apellidos desconocidos',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
@@ -244,14 +281,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Fecha de unión: ${dummyData['fechaUnion'] ?? 'N/A'}',
+                              'Fecha de unión: ${_userData['fechaUnion'] ?? 'N/A'}',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
                             ),
                             Text(
-                              'Rango: ${dummyData['rango'] ?? 'N/A'}',
+                              'Rango: ${_userData['rango'] ?? 'N/A'}',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -259,19 +296,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             SizedBox(height: 10),
-                            if (dummyData['subsistemas'] != null &&
-                                (dummyData['subsistemas'] as List).isNotEmpty)
+                            if (_userData['subsistemas'] != null &&
+                                (_userData['subsistemas'] as List).isNotEmpty)
                               Text(
-                                'Subsistemas: ${(dummyData['subsistemas'] as List).join(', ')}',
+                                'Subsistemas: ${(_userData['subsistemas'] as List).join(', ')}',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                            if (dummyData['liderSubsistema'] != null)
+                            if (_userData['liderSubsistema'] != null)
                               Text(
-                                'Líder del subsistema de ${dummyData['liderSubsistema']}',
+                                'Líder del subsistema de ${_userData['liderSubsistema']}',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -295,9 +332,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   SizedBox(height: 10),
-                  // Ajuste del padding para el Divider
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 8), // Agregar espacio debajo de la línea
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Divider(color: Colors.white, thickness: 1),
                   ),
                   Row(
@@ -307,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           children: [
                             Text(
-                              dummyData['tareasCompletadas']?.toString() ?? '0',
+                              _userData['tareasCompletadas']?.toString() ?? '0',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -330,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           children: [
                             Text(
-                              dummyData['tareasCreadas']?.toString() ?? '0',
+                              _userData['tareasCreadas']?.toString() ?? '0',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -353,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           children: [
                             Text(
-                              dummyData['horasTrabajadas']?.toString() ?? '0',
+                              _userData['horasTrabajadas']?.toString() ?? '0',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -392,15 +428,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisSpacing: 10,
                     physics: NeverScrollableScrollPhysics(),
                     childAspectRatio: 2.5,
-                    children: [
-                      _buildSubsystemCard('Logística', '12 tareas'),
-                      _buildSubsystemCard('Mecánica', '8 tareas'),
-                      _buildSubsystemCard('Programación', '6 tareas'),
-                      _buildSubsystemCard('Estrategia', '5 tareas'),
-                      _buildSubsystemCard('Drivers', '4 tareas'),
-                      _buildSubsystemCard('Redes Sociales', '1 tareas'),
-                      _buildSubsystemCard('Junta', '0 tareas'),
-                    ],
+                    children: _allSubsistemas.map((subsistema) {
+                      final count = tareasCompletadasPorSubsistema[subsistema] ?? 0;
+                      return _buildSubsystemCard(subsistema, '$count tareas');
+                    }).toList(),
                   ),
                   SizedBox(height: 20),
                 ],
@@ -426,12 +457,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-
   Widget _buildSubsystemCard(String title, String count) {
     Color backgroundColor = Colors.grey[800]!;
-    if (dummyData['subsistemas'] != null &&
-        (dummyData['subsistemas'] as List).contains(title)) {
-      backgroundColor = dummyData['liderSubsistema'] == title ? Colors.green : Colors.red;
+    if (_userData['subsistemas'] != null &&
+        (_userData['subsistemas'] as List).contains(title)) {
+      backgroundColor = _userData['liderSubsistema'] == title ? Colors.green : Colors.red;
     }
 
     Color countTextColor = (backgroundColor == Colors.red || backgroundColor == Colors.green)
