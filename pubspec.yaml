@@ -12,13 +12,25 @@ dependencies:
     sdk: flutter
   url_launcher: ^6.1.7
   dio: ^5.4.0
-
-  # Aquí puedes agregar más dependencias si las necesitas
+  
+  # State Management - BLoC Pattern
+  flutter_bloc: ^8.1.3
+  bloc: ^8.1.1
+  equatable: ^2.0.5
+  
+  # Inyección de Dependencias
+  get_it: ^7.5.0
+  
+  # Navegación
+  go_router: ^10.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   table_calendar: ^3.0.6
+  
+  # Testing
+  mocktail: ^1.0.0
 
 flutter:
   uses-material-design: true

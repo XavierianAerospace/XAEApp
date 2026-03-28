@@ -1,53 +1,26 @@
 import 'package:flutter/material.dart';
-import 'data/api_service.dart';
-import 'add_hours_screen.dart';
+import '../add_hours/add_hours_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final ApiService apiService;
-  final int userId;
-
-  ProfileScreen({required this.apiService, required this.userId});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Map<String, dynamic> _userData = {};
-  List<String> _allSubsistemas = [];
-  bool _isLoading = true;
+  final Map<String, dynamic> _userData = {};
+  final List<String> _allSubsistemas = [];
+  final bool _isLoading = false;
   bool isActive = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final user = await widget.apiService.getUser(widget.userId);
-      final subsistemas = await widget.apiService.getSubsistemas();
-
-      setState(() {
-        _userData = user;
-        _allSubsistemas = subsistemas
-            .map<String>((s) => s['nombre'] as String)
-            .toList();
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error cargando perfil: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   void _showEditModal(BuildContext context) {
-    TextEditingController nameController = TextEditingController(text: _userData['nombre']);
-    TextEditingController lastNameController = TextEditingController(text: _userData['apellidos']);
-    List<String> selectedSubsistemas = List<String>.from(_userData['subsistemas'] ?? []);
+    TextEditingController nameController =
+        TextEditingController(text: _userData['nombre']);
+    TextEditingController lastNameController =
+        TextEditingController(text: _userData['apellidos']);
+    List<String> selectedSubsistemas =
+        List<String>.from(_userData['subsistemas'] ?? []);
 
     showModalBottomSheet(
       context: context,
@@ -117,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: _allSubsistemas.map((subsistema) {
-                      final isSelected = selectedSubsistemas.contains(subsistema);
+                      final isSelected =
+                          selectedSubsistemas.contains(subsistema);
                       return FilterChip(
                         label: Text(
                           subsistema,
@@ -142,25 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () async {
-                      // Actualizar en el servidor
-                      final updatedData = Map<String, dynamic>.from(_userData);
-                      updatedData['nombre'] = nameController.text;
-                      updatedData['apellidos'] = lastNameController.text;
-                      updatedData['subsistemas'] = selectedSubsistemas;
-
-                      try {
-                        final result = await widget.apiService.updateUser(
-                          widget.userId,
-                          updatedData,
-                        );
-                        setState(() {
-                          _userData = result;
-                        });
-                      } catch (e) {
-                        print('Error al guardar perfil: $e');
-                      }
-
+                    onPressed: () {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -199,9 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    // Obtener las tareas completadas por subsistema
     final Map<String, dynamic> tareasCompletadasPorSubsistema =
-        Map<String, dynamic>.from(_userData['tareasCompletadasPorSubsistema'] ?? {});
+        Map<String, dynamic>.from(
+            _userData['tareasCompletadasPorSubsistema'] ?? {});
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -231,7 +187,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(height: 10),
-                  // Circulo indicador de estado
                   Container(
                     margin: EdgeInsets.only(bottom: 10),
                     width: 20,
@@ -429,7 +384,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     physics: NeverScrollableScrollPhysics(),
                     childAspectRatio: 2.5,
                     children: _allSubsistemas.map((subsistema) {
-                      final count = tareasCompletadasPorSubsistema[subsistema] ?? 0;
+                      final count =
+                          tareasCompletadasPorSubsistema[subsistema] ?? 0;
                       return _buildSubsystemCard(subsistema, '$count tareas');
                     }).toList(),
                   ),
@@ -446,7 +402,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddHoursScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const AddHoursScreen()),
                 );
               },
               child: Icon(Icons.add, color: Colors.black),
@@ -461,16 +418,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color backgroundColor = Colors.grey[800]!;
     if (_userData['subsistemas'] != null &&
         (_userData['subsistemas'] as List).contains(title)) {
-      backgroundColor = _userData['liderSubsistema'] == title ? Colors.green : Colors.red;
+      backgroundColor =
+          _userData['liderSubsistema'] == title ? Colors.green : Colors.red;
     }
 
-    Color countTextColor = (backgroundColor == Colors.red || backgroundColor == Colors.green)
-        ? Colors.black
-        : Colors.grey;
+    Color countTextColor =
+        (backgroundColor == Colors.red || backgroundColor == Colors.green)
+            ? Colors.black
+            : Colors.grey;
 
-    FontWeight countFontWeight = (backgroundColor == Colors.red || backgroundColor == Colors.green)
-        ? FontWeight.bold
-        : FontWeight.normal;
+    FontWeight countFontWeight =
+        (backgroundColor == Colors.red || backgroundColor == Colors.green)
+            ? FontWeight.bold
+            : FontWeight.normal;
 
     return SizedBox(
       height: 60,

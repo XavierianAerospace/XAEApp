@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
-import 'data/api_service.dart';
-import 'home_screen.dart';
-import 'profile_screen.dart';
-import 'inventory_screen.dart';
-import 'pending_screen.dart';
+import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
+import '../inventory/inventory_screen.dart';
+import '../pending/pending_screen.dart';
 
 class MenuScreen extends StatefulWidget {
-  final ApiService apiService;
-  final int userId;
-
-  MenuScreen({required this.apiService, required this.userId});
+  const MenuScreen({Key? key}) : super(key: key);
 
   @override
-  _MenuScreenState createState() => _MenuScreenState();
+  State<MenuScreen> createState() => _MenuScreenState();
 }
 
 class _MenuScreenState extends State<MenuScreen> {
@@ -24,10 +20,10 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _screens = [
-      HomeScreen(apiService: widget.apiService),
-      PendingScreen(apiService: widget.apiService, userId: widget.userId),
-      InventoryScreen(apiService: widget.apiService),
-      ProfileScreen(apiService: widget.apiService, userId: widget.userId),
+      const HomeScreen(),
+      const PendingScreen(),
+      const InventoryScreen(),
+      const ProfileScreen(),
     ];
   }
 
@@ -57,11 +53,13 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   /// Método para crear los ítems animados
-  BottomNavigationBarItem _buildAnimatedItem(IconData icon, String label, int index) {
+  BottomNavigationBarItem _buildAnimatedItem(
+      IconData icon, String label, int index) {
     return BottomNavigationBarItem(
       icon: TweenAnimationBuilder(
-        tween: Tween<double>(begin: 1.0, end: _currentIndex == index ? 1.2 : 1.0),
-        duration: Duration(milliseconds: 200),
+        tween:
+            Tween<double>(begin: 1.0, end: _currentIndex == index ? 1.2 : 1.0),
+        duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         builder: (context, scale, child) {
           return Transform.scale(

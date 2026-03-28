@@ -1,46 +1,16 @@
 import 'package:flutter/material.dart';
-import 'data/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  final ApiService apiService;
-
-  HomeScreen({required this.apiService});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> _allTasks = [];
-  List<String> _miembrosActivos = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final tasks = await widget.apiService.getTasks();
-      final members = await widget.apiService.getMembers();
-
-      setState(() {
-        _allTasks = tasks;
-        _miembrosActivos = members
-            .where((m) => m['activo'] == true)
-            .map<String>((m) => m['nombre'] as String)
-            .toList();
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error cargando datos del home: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  final List<Map<String, dynamic>> _allTasks = [];
+  final List<String> _miembrosActivos = [];
+  final bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {

@@ -1,28 +1,47 @@
 import 'package:flutter/material.dart';
-import 'data/dio_api_service.dart';
-import 'login_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'core/di/service_locator.dart';
+import 'core/router/app_routes.dart';
+import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/bloc/auth_event.dart';
+import 'features/auth/bloc/auth_state.dart';
 
 void main() {
   // Inicializar los servicios de Flutter y los plugins
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Crear la instancia del servicio API (Dio + json-server)
-  final apiService = DioApiService();
+  // Setup Service Locator (GetIt) para inyección de dependencias
+  setupServiceLocator();
 
-  runApp(MyApp(apiService: apiService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final DioApiService apiService;
-
-  MyApp({required this.apiService});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Javex Robotics',
-      theme: ThemeData(primarySwatch: Colors.red),
-      home: LoginScreen(apiService: apiService),
+    // Obtener el AuthBloc desde GetIt
+    final authBloc = GetIt.I<AuthBloc>();
+
+    // Iniciar verificación de autenticación
+    authBloc.add(AuthCheckRequested());
+
+    return BlocBuilder<AuthBloc, AuthState>(
+      bloc: authBloc,
+      builder: (context, state) {
+        // Determinar si el usuario está autenticado
+        final isAuthenticated = state is AuthAuthenticated;
+
+        return MaterialApp.router(
+          title: 'Javex Robotics',
+          theme: ThemeData(primarySwatch: Colors.red),
+          routerConfig: AppRouter.createRouter(
+            initiallyAuthenticated: isAuthenticated,
+          ),
+        );
+      },
     );
   }
 }

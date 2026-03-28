@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'data/api_service.dart';
 
 class PendingScreen extends StatefulWidget {
-  final ApiService apiService;
-  final int userId;
-
-  PendingScreen({required this.apiService, required this.userId});
+  const PendingScreen({Key? key}) : super(key: key);
 
   @override
   _PendingScreenState createState() => _PendingScreenState();
 }
 
 class _PendingScreenState extends State<PendingScreen> {
-  // Datos cargados del API
+  // Placeholder data - empty lists and maps for placeholder data
   Map<String, List<Map<String, dynamic>>> tareasPorSubsistema = {};
   String? _nombreUsuario;
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   String subsistemaSeleccionado = 'Logística';
   DateTime focusedDay = DateTime.now();
@@ -26,40 +22,21 @@ class _PendingScreenState extends State<PendingScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initializePlaceholderData();
   }
 
-  Future<void> _loadData() async {
-    try {
-      final tasks = await widget.apiService.getTasks();
-      final user = await widget.apiService.getUser(widget.userId);
-
-      // Organizar tareas por subsistema
-      final Map<String, List<Map<String, dynamic>>> organized = {};
-      for (final task in tasks) {
-        final subsistema = task['subsistema'] as String;
-        // Convertir la fecha string a DateTime
-        if (task['fecha'] is String) {
-          task['fecha'] = DateTime.parse(task['fecha']);
-        }
-        organized.putIfAbsent(subsistema, () => []);
-        organized[subsistema]!.add(task);
-      }
-
-      setState(() {
-        tareasPorSubsistema = organized;
-        _nombreUsuario = user['nombre'] ?? 'UsuarioActual';
-        if (organized.keys.isNotEmpty) {
-          subsistemaSeleccionado = organized.keys.first;
-        }
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error cargando pendientes: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  void _initializePlaceholderData() {
+    // Initialize with empty placeholder data
+    setState(() {
+      tareasPorSubsistema = {
+        'Logística': [],
+        'Operaciones': [],
+        'Desarrollo': [],
+      };
+      _nombreUsuario = 'UsuarioActual';
+      subsistemaSeleccionado = 'Logística';
+      _isLoading = false;
+    });
   }
 
   @override
@@ -72,7 +49,8 @@ class _PendingScreenState extends State<PendingScreen> {
     }
 
     // Obtener las tareas filtradas por subsistema
-    final tareasSeleccionadas = tareasPorSubsistema[subsistemaSeleccionado] ?? [];
+    final tareasSeleccionadas =
+        tareasPorSubsistema[subsistemaSeleccionado] ?? [];
 
     return Container(
       color: Colors.black,
@@ -130,7 +108,8 @@ class _PendingScreenState extends State<PendingScreen> {
                     }).toList(),
                     onChanged: (String? nuevoValor) {
                       setState(() {
-                        subsistemaSeleccionado = nuevoValor ?? subsistemaSeleccionado;
+                        subsistemaSeleccionado =
+                            nuevoValor ?? subsistemaSeleccionado;
                       });
                     },
                   ),
@@ -180,7 +159,8 @@ class _PendingScreenState extends State<PendingScreen> {
               itemBuilder: (context, index) {
                 final tarea = tareasSeleccionadas[index];
                 return ListTile(
-                  leading: Icon(Icons.warning, color: _getUrgenciaColor(tarea['urgencia'])),
+                  leading: Icon(Icons.warning,
+                      color: _getUrgenciaColor(tarea['urgencia'])),
                   title: Text(
                     '${tarea['titulo']} (${tarea['urgencia']})',
                     style: TextStyle(
@@ -197,7 +177,8 @@ class _PendingScreenState extends State<PendingScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  onTap: () => _mostrarDetallesPendiente(context, tarea, subsistemaSeleccionado),
+                  onTap: () => _mostrarDetallesPendiente(
+                      context, tarea, subsistemaSeleccionado),
                 );
               },
             ),
@@ -234,17 +215,24 @@ class _PendingScreenState extends State<PendingScreen> {
               outsideDaysVisible: false,
             ),
             eventLoader: (day) {
-              final todasLasTareas = tareasPorSubsistema.values.expand((tareas) => tareas).toList();
-              final tareasDelDia = todasLasTareas.where((tarea) => isSameDay(tarea['fecha'], day)).toList();
+              final todasLasTareas = tareasPorSubsistema.values
+                  .expand((tareas) => tareas)
+                  .toList();
+              final tareasDelDia = todasLasTareas
+                  .where((tarea) => isSameDay(tarea['fecha'], day))
+                  .toList();
               return tareasDelDia;
             },
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 if (events.isNotEmpty) {
                   final tareasDelDia = events as List<Map<String, dynamic>>;
-                  final urgenciaMasAlta = tareasDelDia.map((tarea) => tarea['urgencia'] as String).reduce(
-                        (a, b) => _getUrgenciaPeso(a) > _getUrgenciaPeso(b) ? a : b,
-                  );
+                  final urgenciaMasAlta = tareasDelDia
+                      .map((tarea) => tarea['urgencia'] as String)
+                      .reduce(
+                        (a, b) =>
+                            _getUrgenciaPeso(a) > _getUrgenciaPeso(b) ? a : b,
+                      );
 
                   return Container(
                     width: 8,
@@ -319,7 +307,8 @@ class _PendingScreenState extends State<PendingScreen> {
                     items: tareasPorSubsistema.keys.map((String subsistema) {
                       return DropdownMenuItem<String>(
                         value: subsistema,
-                        child: Text(subsistema, style: TextStyle(color: Colors.white)),
+                        child: Text(subsistema,
+                            style: TextStyle(color: Colors.white)),
                       );
                     }).toList(),
                     onChanged: (String? nuevoValor) {
@@ -335,8 +324,10 @@ class _PendingScreenState extends State<PendingScreen> {
                     decoration: InputDecoration(
                       labelText: 'Título',
                       labelStyle: TextStyle(color: Colors.white, fontSize: 16),
-                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red)),
                     ),
                     onChanged: (value) => titulo = value,
                   ),
@@ -348,13 +339,15 @@ class _PendingScreenState extends State<PendingScreen> {
                     decoration: InputDecoration(
                       labelText: 'Descripción',
                       labelStyle: TextStyle(color: Colors.white, fontSize: 16),
-                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.red)),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red)),
                     ),
                     onChanged: (value) => descripcion = value,
                   ),
                   SizedBox(height: 16),
-                  // Nombre del creador (del API, no hardcodeado)
+                  // Nombre del creador (placeholder data)
                   Text(
                     'Nombre del creador: ${_nombreUsuario ?? "Desconocido"}',
                     style: TextStyle(color: Colors.white, fontSize: 16),
@@ -396,7 +389,9 @@ class _PendingScreenState extends State<PendingScreen> {
                                 surface: Colors.black,
                                 onSurface: Colors.white,
                               ),
-                              dialogBackgroundColor: Colors.black,
+                              dialogTheme: DialogThemeData(
+                                backgroundColor: Colors.black,
+                              ),
                             ),
                             child: child!,
                           );
@@ -424,24 +419,22 @@ class _PendingScreenState extends State<PendingScreen> {
                           urgencia != null &&
                           fechaSeleccionada != null) {
                         try {
-                          // Crear tarea en el servidor
-                          final newTask = await widget.apiService.createTask({
+                          // Create task with placeholder data (no API call)
+                          final newTask = {
+                            'id': DateTime.now().millisecondsSinceEpoch,
                             'titulo': titulo!,
                             'descripcion': descripcion!,
                             'urgencia': urgencia!,
-                            'fecha': fechaSeleccionada!.toIso8601String().split('T').first,
+                            'fecha': fechaSeleccionada!,
                             'subsistema': subsistemaSeleccionadoAgregar,
                             'nombreCreador': _nombreUsuario ?? 'Desconocido',
-                          });
-
-                          // Convertir fecha string a DateTime para uso local
-                          if (newTask['fecha'] is String) {
-                            newTask['fecha'] = DateTime.parse(newTask['fecha']);
-                          }
+                          };
 
                           setState(() {
-                            tareasPorSubsistema.putIfAbsent(subsistemaSeleccionadoAgregar, () => []);
-                            tareasPorSubsistema[subsistemaSeleccionadoAgregar]!.add(newTask);
+                            tareasPorSubsistema.putIfAbsent(
+                                subsistemaSeleccionadoAgregar, () => []);
+                            tareasPorSubsistema[subsistemaSeleccionadoAgregar]!
+                                .add(newTask);
                           });
                           Navigator.pop(context);
                         } catch (e) {
@@ -455,7 +448,8 @@ class _PendingScreenState extends State<PendingScreen> {
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Por favor completa todos los campos'),
+                            content:
+                                Text('Por favor completa todos los campos'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -499,7 +493,8 @@ class _PendingScreenState extends State<PendingScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            final pendientes = tareasPorSubsistema[subsistemaSeleccionadoCompletar] ?? [];
+            final pendientes =
+                tareasPorSubsistema[subsistemaSeleccionadoCompletar] ?? [];
             return Padding(
               padding: EdgeInsets.only(
                 left: 16.0,
@@ -579,8 +574,7 @@ class _PendingScreenState extends State<PendingScreen> {
                             ElevatedButton(
                               onPressed: () async {
                                 try {
-                                  // Eliminar del servidor
-                                  await widget.apiService.deleteTask(tarea['id']);
+                                  // Remove task from placeholder data (no API call)
                                   setState(() {
                                     pendientes.remove(tarea);
                                   });
@@ -588,7 +582,8 @@ class _PendingScreenState extends State<PendingScreen> {
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Error al completar la tarea'),
+                                      content:
+                                          Text('Error al completar la tarea'),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -629,7 +624,8 @@ class _PendingScreenState extends State<PendingScreen> {
           ),
           title: Text(
             '¿Quieres abrir el Notion?',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           actions: [
             ElevatedButton(
@@ -664,7 +660,8 @@ class _PendingScreenState extends State<PendingScreen> {
   }
 
   void _openNotion() async {
-    final Uri notionUrl = Uri.parse('https://www.notion.so/Javex-Robotics-13f4be11d8ed8012be7afa6b10bbf0d1?pvs=4');
+    final Uri notionUrl = Uri.parse(
+        'https://www.notion.so/Javex-Robotics-13f4be11d8ed8012be7afa6b10bbf0d1?pvs=4');
 
     try {
       if (await canLaunchUrl(notionUrl)) {
@@ -700,8 +697,11 @@ class _PendingScreenState extends State<PendingScreen> {
 
   // Modal para mostrar tareas del día seleccionado
   void _mostrarTareasDelDia(BuildContext context) {
-    final todasLasTareas = tareasPorSubsistema.values.expand((tareas) => tareas).toList();
-    final tareasDelDia = todasLasTareas.where((tarea) => isSameDay(tarea['fecha'], selectedDay)).toList();
+    final todasLasTareas =
+        tareasPorSubsistema.values.expand((tareas) => tareas).toList();
+    final tareasDelDia = todasLasTareas
+        .where((tarea) => isSameDay(tarea['fecha'], selectedDay))
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -717,7 +717,10 @@ class _PendingScreenState extends State<PendingScreen> {
             children: [
               Text(
                 'Pendientes para el ${_formatDate(selectedDay)}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red),
               ),
               SizedBox(height: 10),
               if (tareasDelDia.isEmpty)
@@ -732,7 +735,8 @@ class _PendingScreenState extends State<PendingScreen> {
                       .key;
 
                   return ListTile(
-                    leading: Icon(Icons.warning, color: _getUrgenciaColor(tarea['urgencia'])),
+                    leading: Icon(Icons.warning,
+                        color: _getUrgenciaColor(tarea['urgencia'])),
                     title: Text(
                       '${tarea['titulo']} - ($subsistema)',
                       style: TextStyle(color: Colors.white),
@@ -755,7 +759,8 @@ class _PendingScreenState extends State<PendingScreen> {
   }
 
   // Modal para mostrar detalles de un pendiente seleccionado
-  void _mostrarDetallesPendiente(BuildContext context, Map<String, dynamic> tarea, String subsistema) {
+  void _mostrarDetallesPendiente(
+      BuildContext context, Map<String, dynamic> tarea, String subsistema) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.black,
@@ -781,7 +786,10 @@ class _PendingScreenState extends State<PendingScreen> {
               RichText(
                 text: TextSpan(
                   text: 'Título: ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   children: [
                     TextSpan(
                       text: '${tarea['titulo']}',
@@ -794,7 +802,10 @@ class _PendingScreenState extends State<PendingScreen> {
               RichText(
                 text: TextSpan(
                   text: 'Subsistema: ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   children: [
                     TextSpan(
                       text: '$subsistema',
@@ -807,7 +818,10 @@ class _PendingScreenState extends State<PendingScreen> {
               RichText(
                 text: TextSpan(
                   text: 'Fecha límite: ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   children: [
                     TextSpan(
                       text: '${_formatDate(tarea['fecha'])}',
@@ -820,7 +834,10 @@ class _PendingScreenState extends State<PendingScreen> {
               RichText(
                 text: TextSpan(
                   text: 'Creado por: ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                   children: [
                     TextSpan(
                       text: '${tarea['nombreCreador'] ?? 'Anónimo'}',
