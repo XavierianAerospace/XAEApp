@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/item.dart';
 
 abstract class InventoryState extends Equatable {
   const InventoryState();
@@ -16,8 +17,8 @@ class InventoryLoading extends InventoryState {
 }
 
 class InventoryLoaded extends InventoryState {
-  final List<Map<String, dynamic>> scannedItems;
-  final List<Map<String, dynamic>> registeredItems;
+  final List<Item> scannedItems;
+  final List<RegisteredItem> registeredItems;
 
   const InventoryLoaded({
     required this.scannedItems,

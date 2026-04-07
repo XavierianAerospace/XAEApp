@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/member.dart';
+import '../../../domain/entities/task.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
@@ -16,8 +18,8 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final List<Map<String, dynamic>> tasks;
-  final List<String> activeMembers;
+  final List<Task> tasks;
+  final List<Member> activeMembers;
 
   const HomeLoaded({
     required this.tasks,

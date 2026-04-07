@@ -1,12 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/api_service.dart';
+import '../../../domain/repositories/task_repository.dart';
+import '../../../domain/repositories/user_repository.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final ApiService apiService;
+  final TaskRepository taskRepository;
+  final UserRepository userRepository;
 
-  HomeBloc({required this.apiService}) : super(const HomeInitial()) {
+  HomeBloc({
+    required this.taskRepository,
+    required this.userRepository,
+  }) : super(const HomeInitial()) {
     on<LoadHomeDataRequested>(_onLoadHomeDataRequested);
   }
 
@@ -17,13 +22,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(const HomeLoading());
 
     try {
-      final tasks = await apiService.getTasks();
-      final members = await apiService.getMembers();
+      final tasks = await taskRepository.getTasks();
+      final members = await userRepository.getMembers();
 
-      final activeMembers = members
-          .where((m) => m['activo'] == true)
-          .map<String>((m) => m['nombre'] as String)
-          .toList();
+      final activeMembers = members.where((m) => m.activo).toList();
 
       emit(HomeLoaded(tasks: tasks, activeMembers: activeMembers));
     } catch (e) {

@@ -1,12 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/api_service.dart';
+import '../../../domain/repositories/inventory_repository.dart';
 import 'inventory_event.dart';
 import 'inventory_state.dart';
 
 class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
-  final ApiService apiService;
+  final InventoryRepository inventoryRepository;
 
-  InventoryBloc({required this.apiService}) : super(const InventoryInitial()) {
+  InventoryBloc({required this.inventoryRepository})
+      : super(const InventoryInitial()) {
     on<LoadInventoryRequested>(_onLoadInventoryRequested);
   }
 
@@ -17,8 +18,8 @@ class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
     emit(const InventoryLoading());
 
     try {
-      final items = await apiService.getItems();
-      final registered = await apiService.getRegisteredItems();
+      final items = await inventoryRepository.getItems();
+      final registered = await inventoryRepository.getRegisteredItems();
 
       emit(InventoryLoaded(scannedItems: items, registeredItems: registered));
     } catch (e) {

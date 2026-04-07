@@ -1,12 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/api_service.dart';
+import '../../../domain/entities/task.dart';
+import '../../../domain/repositories/task_repository.dart';
 import 'pending_event.dart';
 import 'pending_state.dart';
 
 class PendingBloc extends Bloc<PendingEvent, PendingState> {
-  final ApiService apiService;
+  final TaskRepository taskRepository;
 
-  PendingBloc({required this.apiService}) : super(const PendingInitial()) {
+  PendingBloc({required this.taskRepository}) : super(const PendingInitial()) {
     on<LoadPendingRequested>(_onLoadPendingRequested);
     on<CreateTaskRequested>(_onCreateTaskRequested);
     on<DeleteTaskRequested>(_onDeleteTaskRequested);
@@ -19,13 +20,12 @@ class PendingBloc extends Bloc<PendingEvent, PendingState> {
     emit(const PendingLoading());
 
     try {
-      final tasks = await apiService.getTasks();
+      final tasks = await taskRepository.getTasks();
 
-      final Map<String, List<Map<String, dynamic>>> organized = {};
+      final Map<String, List<Task>> organized = {};
       for (final task in tasks) {
-        final subsistema = task['subsistema'] as String;
-        organized.putIfAbsent(subsistema, () => []);
-        organized[subsistema]!.add(task);
+        organized.putIfAbsent(task.subsistema, () => []);
+        organized[task.subsistema]!.add(task);
       }
 
       emit(PendingLoaded(tasksBySubsistema: organized));
@@ -39,7 +39,7 @@ class PendingBloc extends Bloc<PendingEvent, PendingState> {
     Emitter<PendingState> emit,
   ) async {
     try {
-      await apiService.createTask(event.task);
+      await taskRepository.createTask(event.task);
     } catch (e) {
       emit(PendingError(message: 'Error creando tarea: ${e.toString()}'));
     }
@@ -50,7 +50,7 @@ class PendingBloc extends Bloc<PendingEvent, PendingState> {
     Emitter<PendingState> emit,
   ) async {
     try {
-      await apiService.deleteTask(event.taskId);
+      await taskRepository.deleteTask(event.taskId);
     } catch (e) {
       emit(PendingError(message: 'Error eliminando tarea: ${e.toString()}'));
     }

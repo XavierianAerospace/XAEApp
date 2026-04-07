@@ -1,9 +1,6 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/user.dart';
 
-/// Estados del AuthBloc
-///
-/// Estos estados representan los diferentes estados que puede tener la autenticación
-/// y son a los que reacciona la UI
 abstract class AuthState extends Equatable {
   const AuthState();
 
@@ -11,19 +8,16 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Estado inicial: No hay sesión verificada aún
 class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
-/// Estado: Cargando (verificando sesión o haciendo login)
 class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
-/// Estado: Autenticado correctamente
 class AuthAuthenticated extends AuthState {
-  final Map<String, dynamic> user;
+  final User user;
 
   const AuthAuthenticated({required this.user});
 
@@ -31,12 +25,10 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
-/// Estado: No autenticado (sin sesión)
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
-/// Estado: Error en la autenticación
 class AuthError extends AuthState {
   final String message;
 

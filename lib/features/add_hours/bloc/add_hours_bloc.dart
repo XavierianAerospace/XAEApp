@@ -1,12 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/api_service.dart';
 import 'add_hours_event.dart';
 import 'add_hours_state.dart';
 
 class AddHoursBloc extends Bloc<AddHoursEvent, AddHoursState> {
-  final ApiService apiService;
-
-  AddHoursBloc({required this.apiService}) : super(const AddHoursInitial()) {
+  AddHoursBloc() : super(const AddHoursInitial()) {
     on<AddHoursRequested>(_onAddHoursRequested);
   }
 

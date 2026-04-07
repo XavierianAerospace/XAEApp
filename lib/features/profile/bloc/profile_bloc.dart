@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../data/api_service.dart';
+import '../../../domain/repositories/user_repository.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final ApiService apiService;
+  final UserRepository userRepository;
 
-  ProfileBloc({required this.apiService}) : super(const ProfileInitial()) {
+  ProfileBloc({required this.userRepository}) : super(const ProfileInitial()) {
     on<LoadProfileRequested>(_onLoadProfileRequested);
     on<UpdateProfileRequested>(_onUpdateProfileRequested);
   }
@@ -18,8 +18,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(const ProfileLoading());
 
     try {
-      final user = await apiService.getUser(event.userId);
-      emit(ProfileLoaded(userData: user));
+      final user = await userRepository.getUser(event.userId);
+      emit(ProfileLoaded(user: user));
     } catch (e) {
       emit(ProfileError(message: 'Error cargando perfil: ${e.toString()}'));
     }
@@ -32,8 +32,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(const ProfileLoading());
 
     try {
-      final result = await apiService.updateUser(event.userId, event.userData);
-      emit(ProfileLoaded(userData: result));
+      final user = await userRepository.updateUser(event.userId, event.userData);
+      emit(ProfileLoaded(user: user));
     } catch (e) {
       emit(ProfileError(message: 'Error actualizando perfil: ${e.toString()}'));
     }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/task.dart';
 
 abstract class PendingState extends Equatable {
   const PendingState();
@@ -16,7 +17,7 @@ class PendingLoading extends PendingState {
 }
 
 class PendingLoaded extends PendingState {
-  final Map<String, List<Map<String, dynamic>>> tasksBySubsistema;
+  final Map<String, List<Task>> tasksBySubsistema;
 
   const PendingLoaded({required this.tasksBySubsistema});
 
