@@ -1,6 +1,14 @@
 import 'package:get_it/get_it.dart';
 import '../../data/api_service.dart';
-import '../../data/dio_api_service.dart';
+import '../../data/api/dio_api_service.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/task_repository_impl.dart';
+import '../../data/repositories/user_repository_impl.dart';
+import '../../data/repositories/inventory_repository_impl.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/task_repository.dart';
+import '../../domain/repositories/user_repository.dart';
+import '../../domain/repositories/inventory_repository.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/home/bloc/home_bloc.dart';
 import '../../features/menu/bloc/menu_bloc.dart';
@@ -9,55 +17,58 @@ import '../../features/profile/bloc/profile_bloc.dart';
 import '../../features/inventory/bloc/inventory_bloc.dart';
 import '../../features/add_hours/bloc/add_hours_bloc.dart';
 
-/// Service Locator - Inyección de Dependencias con GetIt
-///
-/// Esta clase se encarga de registrar todas las dependencias del proyecto
-/// siguiendo el patrón de Singleton (servicios globales) y Factory (instancias efímeras)
 final getIt = GetIt.instance;
 
-/// Configuración inicial del Service Locator
 void setupServiceLocator() {
-  // ==================== REGISTRAR SINGLETONS (Servicios Globales) ====================
+  // ==================== SINGLETONS (Servicios Globales) ====================
 
-  /// API Service - Se crea UNA sola instancia que se reutiliza en toda la app
-  getIt.registerSingleton<ApiService>(
-    DioApiService(),
+  // API Service
+  getIt.registerSingleton<ApiService>(DioApiService());
+
+  // Repositories
+  getIt.registerSingleton<AuthRepository>(
+    AuthRepositoryImpl(getIt<ApiService>()),
+  );
+  getIt.registerSingleton<TaskRepository>(
+    TaskRepositoryImpl(getIt<ApiService>()),
+  );
+  getIt.registerSingleton<UserRepository>(
+    UserRepositoryImpl(getIt<ApiService>()),
+  );
+  getIt.registerSingleton<InventoryRepository>(
+    InventoryRepositoryImpl(getIt<ApiService>()),
   );
 
-  // ==================== REGISTRAR FACTORIES (Instancias Efímeras - BLoCs) ====================
+  // ==================== FACTORIES (BLoCs) ====================
 
-  /// AuthBloc - Factory Pattern: Se crea una nueva instancia cada vez que se accede
   getIt.registerFactory<AuthBloc>(
-    () => AuthBloc(apiService: getIt<ApiService>()),
+    () => AuthBloc(authRepository: getIt<AuthRepository>()),
   );
 
-  /// HomeBloc - Factory Pattern
   getIt.registerFactory<HomeBloc>(
-    () => HomeBloc(apiService: getIt<ApiService>()),
+    () => HomeBloc(
+      taskRepository: getIt<TaskRepository>(),
+      userRepository: getIt<UserRepository>(),
+    ),
   );
 
-  /// MenuBloc - Factory Pattern
   getIt.registerFactory<MenuBloc>(
-    () => MenuBloc(apiService: getIt<ApiService>()),
+    () => MenuBloc(),
   );
 
-  /// PendingBloc - Factory Pattern
   getIt.registerFactory<PendingBloc>(
-    () => PendingBloc(apiService: getIt<ApiService>()),
+    () => PendingBloc(taskRepository: getIt<TaskRepository>()),
   );
 
-  /// ProfileBloc - Factory Pattern
   getIt.registerFactory<ProfileBloc>(
-    () => ProfileBloc(apiService: getIt<ApiService>()),
+    () => ProfileBloc(userRepository: getIt<UserRepository>()),
   );
 
-  /// InventoryBloc - Factory Pattern
   getIt.registerFactory<InventoryBloc>(
-    () => InventoryBloc(apiService: getIt<ApiService>()),
+    () => InventoryBloc(inventoryRepository: getIt<InventoryRepository>()),
   );
 
-  /// AddHoursBloc - Factory Pattern
   getIt.registerFactory<AddHoursBloc>(
-    () => AddHoursBloc(apiService: getIt<ApiService>()),
+    () => AddHoursBloc(),
   );
 }
