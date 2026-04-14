@@ -1,0 +1,705 @@
+\documentclass[12pt]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{letterpaper, margin=1in}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+
+% Configuración de página
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Especificación Técnica - Aplicación Móvil XAE}
+\fancyhead[R]{Página \thepage\ de \pageref{LastPage}}
+\fancyfoot[C]{\footnotesize Semillero XAE - Pontificia Universidad Javeriana}
+
+% Formato de secciones
+\titleformat{\section}{\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+% ==================== PORTADA ====================
+\begin{center}
+  \vspace*{1cm}
+
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \includegraphics[width=0.8\textwidth]{Javeriana.png}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.45\textwidth}
+            \centering
+            \includegraphics[width=0.8\textwidth]{XAE_Logo.png}
+        \end{minipage}
+    \end{center}
+    
+    \vspace{1cm}
+    
+    \LARGE\textbf{Aplicación Móvil Flutter para el Semillero XAE} \\
+    \vspace{0.5cm}
+    \Huge\textbf{Especificación Técnica} \\
+    \vspace{0.3cm}
+    \Large\textbf{Documento Técnico de Desarrollo} \\
+    \vspace{1cm}
+    
+    \normalsize
+    \textbf{Elaborado por:} \\
+    \textbf{Semillero Xavierian Aerospace Engineering (XAE)} \\
+    \textbf{Pontificia Universidad Javeriana} \\
+    \vspace{0.5cm}
+    
+    \textbf{Versión: 1.0} \\
+    \textbf{Fecha: \today} \\
+    \vspace{1cm}
+    
+    \small
+    Bogotá D.C., Colombia \\
+    Pontificia Universidad Javeriana
+\end{center}
+
+\newpage
+
+% ==================== CONTENIDO PRINCIPAL ====================
+\tableofcontents
+\newpage
+
+\section*{Resumen Ejecutivo}
+\addcontentsline{toc}{section}{Resumen Ejecutivo}
+
+\begin{abstract}
+Especificación técnica completa para el desarrollo de una aplicación móvil multiplataforma (Android/iOS) utilizando Flutter que consumirá los endpoints del Servidor Central Modular del Semillero XAE. La aplicación mantendrá coherencia visual y funcional con la versión web, implementando la misma estética industrial de los años 80 con arquitectura modular optimizada para dispositivos móviles.
+\end{abstract}a
+
+\section{Introducción y Contexto}
+\label{sec:introduccion}
+
+\subsection{Propósito del Sistema}
+La aplicación móvil Flutter tiene como objetivo proporcionar una experiencia nativa en dispositivos móviles para los miembros y seguidores del Semillero XAE, permitiendo:
+
+\begin{itemize}
+    \item Acceso móvil a toda la información del semillero desde cualquier lugar
+    \item Notificaciones push para actualizaciones importantes y recordatorios
+    \item Funcionalidades específicas para móvil (cámara, GPS, sensores)
+    \item Experiencia offline limitada para contenido crítico
+    \item Integración nativa con características del dispositivo
+    \item Coherencia total con la versión web en funcionalidades y diseño
+\end{itemize}
+
+\subsection{Relación con el Ecosistema XAE}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Componente} & \textbf{Relación con la App Móvil} \\
+\hline
+Servidor Central & Fuente única de datos mediante APIs RESTful \\
+\hline
+Aplicación Web & Diseño y funcionalidad coherentes, diferentes experiencias de usuario \\
+\hline
+NAS & Archivos e imágenes servidos a través del servidor \\
+\hline
+Sistema de Autenticación & Mismo sistema de identidad y permisos \\
+\hline
+\end{tabularx}
+\caption{Integración con el ecosistema existente}
+\end{table}
+
+\subsection{Ventajas de Flutter para el Proyecto}
+\begin{itemize}
+    \item \textbf{Multiplataforma}: Un solo código base para Android e iOS
+    \item \textbf{Productividad}: Hot reload para desarrollo ágil
+    \item \textbf{Performance}: Compilación nativa y 60 FPS consistentes
+    \item \textbf{Consistencia UI}: Diseño pixel-perfect en ambas plataformas
+    \item \textbf{Comunidad}: Amplio ecosistema de paquetes y documentación
+\end{itemize}
+
+\section{Objetivos y Alcance Detallado}
+\label{sec:objetivos}
+
+\subsection{Objetivos Técnicos Específicos}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|c|X|c|}
+\hline
+\textbf{ID} & \textbf{Objetivo Técnico} & \textbf{Prioridad} \\
+\hline
+FM-01 & Implementar arquitectura Clean Architecture & Alta \\
+\hline
+FM-02 & Consumir 100\% de endpoints disponibles del servidor & Alta \\
+\hline
+FM-03 & Mantener coherencia visual total con la versión web & Alta \\
+\hline
+FM-04 & Implementar autenticación segura con biometría & Alta \\
+\hline
+FM-05 & Cache offline para datos críticos & Media \\
+\hline
+FM-06 & Notificaciones push con Firebase Cloud Messaging & Media \\
+\hline
+FM-07 & Despliegue en Google Play y App Store & Alta \\
+\hline
+FM-08 & Testing con cobertura >75\% & Media \\
+\hline
+FM-09 & Soporte responsive para diferentes dispositivos & Media \\
+\hline
+\end{tabularx}
+\caption{Objetivos técnicos de la aplicación móvil}
+\end{table}
+
+\subsection{Alcance Funcional}
+
+\subsubsection{Secciones Públicas}
+\begin{itemize}
+    \item \textbf{Inicio}: Dashboard con resumen, noticias y accesos rápidos
+    \item \textbf{Proyectos Actuales}: Listado, filtros, detalle con galería
+    \item \textbf{Integrantes}: Directorio de miembros con perfiles públicos
+    \item \textbf{Comunicaciones}: Noticias, calendario de eventos, contactos
+    \item \textbf{Redes Sociales}: Feeds integrados y enlaces
+    \item \textbf{Repositorios}: Listado de proyectos GitHub del semillero
+\end{itemize}
+
+\subsubsection{Secciones Privadas (Requieren Autenticación)}
+\begin{itemize}
+    \item \textbf{Impresora 3D}: Dashboard, cola de trabajos, subida de modelos
+    \item \textbf{Gestión de Tareas}: Tablero Kanban, tareas asignadas, comentarios
+    \item \textbf{Perfil de Usuario}: Visualización, edición, configuración
+\end{itemize}
+
+\subsubsection{Funcionalidades Específicas de Móvil}
+\begin{itemize}
+    \item Autenticación biométrica (huella, rostro)
+    \item Notificaciones push para eventos y recordatorios
+    \item Cache offline de datos esenciales
+    \item Integración con cámara para subida de imágenes
+    \item Geolocalización para eventos
+    \item Modo oscuro siguiendo la paleta de colores
+\end{itemize}
+
+\section{Arquitectura Técnica}
+\label{sec:arquitectura}
+
+\subsection{Arquitectura Flutter - Clean Architecture}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{flutter-architecture}
+\caption{Diagrama de arquitectura Clean Architecture para Flutter}
+\label{fig:arquitectura-flutter}
+\end{figure}
+
+\subsection{Patrones y Tecnologías}
+
+\subsubsection{State Management - BLoC Pattern}
+\begin{itemize}
+    \item \textbf{Patrón BLoC}: Separación clara entre UI y lógica de negocio
+    \item \textbf{Streams}: Manejo reactivo del estado de la aplicación
+    \item \textbf{Eventos y Estados}: Flujo predecible y testeable
+    \item \textbf{Cubit}: Alternativa más simple para casos menos complejos
+\end{itemize}
+
+\subsubsection{Inyección de Dependencias}
+\begin{itemize}
+    \item \textbf{Get It}: Container de dependencias simple y eficiente
+    \item \textbf{Singleton Pattern}: Para servicios globales
+    \item \textbf{Factory Pattern}: Para instancias efímeras
+    \item \textbf{Lazy Loading}: Inicialización bajo demanda
+\end{itemize}
+
+\subsubsection{Navegación}
+\begin{itemize}
+    \item \textbf{Go Router}: Navegación declarativa con deep linking
+    \item \textbf{Rutas Nombradas}: Estructura clara de navegación
+    \item \textbf{Protected Routes}: Middleware para autenticación
+    \item \textbf{Transiciones Personalizadas}: Animaciones coherentes con el estilo
+\end{itemize}
+
+\subsection{Estructura de Carpetas}
+\begin{verbatim}
+lib/
+├── core/
+│   ├── constants/
+│   ├── theme/
+│   ├── utils/
+│   └── widgets/
+├── features/
+│   ├── home/
+│   ├── projects/
+│   ├── auth/
+│   └── profile/
+├── data/
+│   ├── api/
+│   ├── cache/
+│   └── repositories/
+└── domain/
+    ├── entities/
+    ├── repositories/
+    └── use_cases/
+\end{verbatim}
+
+\subsection{Integración con el Servidor}
+
+\subsubsection{Cliente HTTP}
+\begin{itemize}
+    \item \textbf{Dio}: Cliente HTTP con interceptores
+    \item \textbf{Interceptores}: Auth, logging, error handling, retry
+    \item \textbf{Serialización}: JSON to Dart con json\_serializable
+    \item \textbf{Timeouts}: Configuración adaptada a redes móviles
+\end{itemize}
+
+\subsubsection{Manejo de Autenticación}
+\begin{itemize}
+    \item \textbf{JWT Tokens}: Access y refresh tokens
+    \item \textbf{Secure Storage}: Almacenamiento seguro en dispositivo
+    \item \textbf{Auto Refresh}: Renovación automática de tokens
+    \item \textbf{Biometría}: Integración con Touch ID / Face ID
+\end{itemize}
+
+\subsubsection{Cache Offline}
+\begin{itemize}
+    \item \textbf{Hive}: Base de datos NoSQL local rápida
+    \item \textbf{Strategy}: Cache-first con fallback a network
+    \item \textbf{TTL}: Expiración por tipo de dato
+    \item \textbf{Sincronización}: Background sync cuando hay conexión
+\end{itemize}
+
+\section{Diseño UI/UX para Móvil}
+\label{sec:diseno}
+
+\subsection{Adaptación del Estilo Industrial-Espacial}
+
+\subsubsection{Paleta de Colores Optimizada}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Color} & \textbf{HEX} & \textbf{Uso en Móvil} \\
+\hline
+Fondo Principal & \#0a0a0f & Pantallas principales \\
+\hline
+Fondo Tarjetas & \#1a1a2e & Cards, list items \\
+\hline
+Acento Primario & \#00ffff & Botones, enlaces activos \\
+\hline
+Acento Secundario & \#ffaa00 & Alertas, acciones \\
+\hline
+Texto Primario & \#ffffff & Contenido principal \\
+\hline
+Texto Secundario & \#aaaaaa & Labels, metadatos \\
+\hline
+\end{tabularx}
+\caption{Paleta de colores para la aplicación móvil}
+\end{table}
+
+\subsubsection{Tipografía Responsive}
+\begin{itemize}
+    \item \textbf{Títulos}: Orbitron - Bold (24, 20, 18pt)
+    \item \textbf{Cuerpo}: Roboto - Regular (16, 14, 12pt)
+    \item \textbf{Técnico}: Roboto Mono - Regular (14, 12pt)
+    \item \textbf{Escalado Dinámico}: Adaptación a preferencias del sistema
+\end{itemize}
+
+\subsection{Componentes de UI Específicos}
+
+\subsubsection{Navegación Móvil}
+\begin{itemize}
+    \item \textbf{Bottom Navigation Bar}: 5 ítems principales con íconos personalizados
+    \item \textbf{Drawer Navigation}: Menú lateral para acceso completo
+    \item \textbf{AppBar Personalizada}: Con logo animado y acciones contextuales
+    \item \textbf{Gestos}: Swipe para acciones rápidas y navegación
+\end{itemize}
+
+\subsubsection{Componentes Reutilizables}
+\begin{itemize}
+    \item \textbf{XAECard}: Tarjeta base con efectos de elevación y glow
+    \item \textbf{XAEButton}: Botones con animaciones de pulsación
+    \item \textbf{XAEInput}: Campos de texto con validación integrada
+    \item \textbf{XAELoading}: Indicadores de carga temáticos
+    \item \textbf{XAEDialog}: Diálogos y modales estilizados
+\end{itemize}
+
+\subsubsection{Listas y Grids Optimizados}
+\begin{itemize}
+    \item \textbf{Lazy Loading}: Carga incremental de listas largas
+    \item \textbf{Pull to Refresh}: Actualización con animación temática
+    \item \textbf{Empty States}: Diseños para datos vacíos
+    \item \textbf{Error States}: Manejo elegante de errores
+\end{itemize}
+
+\subsection{Animaciones y Transiciones}
+\begin{itemize}
+    \item \textbf{Page Transitions}: Desvanecimiento y desplazamiento
+    \item \textbf{Hero Animations}: Para elementos compartidos entre pantallas
+    \item \textbf{Micro-interacciones}: Feedback táctil en botones y cards
+    \item \textbf{Loading Animations}: Spinners con estilo industrial
+\end{itemize}
+
+\subsection{Responsive Design}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Dispositivo} & \textbf{Ancho} & \textbf{Estrategia} \\
+\hline
+Móviles pequeños & < 360px & 1 columna, tipografía compacta \\
+\hline
+Móviles estándar & 360-600px & 1 columna, diseño optimizado \\
+\hline
+Tabletas pequeñas & 600-840px & 2 columnas en listados \\
+\hline
+Tabletas grandes & 840-1200px & Layout maestro-detalle \\
+\hline
+\end{tabularx}
+\caption{Estrategia responsive para diferentes dispositivos}
+\end{table}
+
+\section{Plan de Implementación}
+\label{sec:implementacion}
+
+\subsection{Fase 1: Setup y Arquitectura (Semanas 1-2)}
+\begin{itemize}
+    \item \textbf{Semana 1}: Configuración del entorno Flutter
+    \begin{itemize}
+        \item Setup del proyecto con estructura Clean Architecture
+        \item Configuración de temas y estilos globales
+        \item Implementación de navegación base
+        \item Configuración de inyección de dependencias
+    \end{itemize}
+    
+    \item \textbf{Semana 2}: Componentes base y conexión API
+    \begin{itemize}
+        \item Desarrollo de widgets reutilizables base
+        \item Implementación de cliente HTTP con interceptores
+        \item Configuración de manejo de errores global
+        \item Integración inicial con endpoints del servidor
+    \end{itemize}
+\end{itemize}
+
+\subsection{Fase 2: Secciones Públicas (Semanas 3-4)}
+\begin{itemize}
+    \item \textbf{Semana 3}: Módulos Home y Proyectos
+    \begin{itemize}
+        \item Pantalla de inicio con dashboard
+        \item Listado y detalle de proyectos
+        \item Galería de imágenes con gestos
+        \item Sistema de filtros y búsqueda
+    \end{itemize}
+    
+    \item \textbf{Semana 4}: Módulos Integrantes y Comunicaciones
+    \begin{itemize}
+        \item Directorio de miembros del semillero
+        \item Perfiles públicos con información detallada
+        \item Sistema de noticias y anuncios
+        \item Calendario de eventos interactivo
+    \end{itemize}
+\end{itemize}
+
+\subsection{Fase 3: Autenticación y Secciones Privadas (Semanas 5-6)}
+\begin{itemize}
+    \item \textbf{Semana 5}: Sistema de autenticación
+    \begin{itemize}
+        \item Pantallas de login y registro
+        \item Manejo seguro de tokens JWT
+        \item Integración con biometría del dispositivo
+        \item Recuperación de contraseña
+    \end{itemize}
+    
+    \item \textbf{Semana 6}: Módulos privados
+    \begin{itemize}
+        \item Dashboard de impresora 3D
+        \item Gestión de tareas asignadas
+        \item Perfil de usuario editable
+        \item Configuración de notificaciones
+    \end{itemize}
+\end{itemize}
+
+\subsection{Fase 4: Optimización y Testing (Semanas 7-8)}
+\begin{itemize}
+    \item \textbf{Semana 7}: Performance y optimización
+    \begin{itemize}
+        \item Optimización de imágenes y assets
+        \item Implementación de cache offline
+        \item Mejora de tiempos de carga
+        \item Ajustes de consumo de batería
+    \end{itemize}
+    
+    \item \textbf{Semana 8}: Testing y preparación release
+    \begin{itemize}
+        \item Testing en dispositivos reales
+        \item Corrección de bugs y ajustes UI/UX
+        \item Preparación de builds de release
+        \item Documentación final
+    \end{itemize}
+\end{itemize}
+
+\section{Integración con Servicios Externos}
+\label{sec:integracion}
+
+\subsection{Firebase Services}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Servicio} & \textbf{Uso en la Aplicación} \\
+\hline
+Firebase Cloud Messaging & Notificaciones push para actualizaciones \\
+\hline
+Firebase Analytics & Tracking de uso y comportamiento \\
+\hline
+Firebase Crashlytics & Reporte y monitoreo de crashes \\
+\hline
+Firebase Remote Config & Configuración remota y feature flags \\
+\hline
+Firebase Authentication & Backup para autenticación (opcional) \\
+\hline
+\end{tabularx}
+\caption{Servicios Firebase integrados}
+\end{table}
+
+\subsection{Integración con Hardware del Dispositivo}
+\begin{itemize}
+    \item \textbf{Cámara}: Para subida de fotos de proyectos y perfil
+    \item \textbf{Galeria}: Selección de imágenes existentes
+    \item \textbf{Geolocalización}: Para eventos con ubicación específica
+    \item \textbf{Biometría}: Autenticación con huella o rostro
+    \item \textbf{Conectividad}: Detección de estado de red
+\end{itemize}
+
+\subsection{Permisos Requeridos}
+\begin{itemize}
+    \item \textbf{Obligatorios}: Internet (conexión al servidor)
+    \item \textbf{Opcionales}: Cámara (subir fotos), Ubicación (eventos), Notificaciones (alertas)
+    \item \textbf{Estrategia}: Solicitud just-in-time con explicación contextual
+\end{itemize}
+
+\section{Despliegue y Distribución}
+\label{sec:despliegue}
+
+\subsection{Preparación para Producción}
+
+\subsubsection{Configuración de Builds}
+\begin{itemize}
+    \item \textbf{Android}: Configuración de Gradle para múltiples variantes
+    \item \textbf{iOS}: Configuración de Xcode y provisioning profiles
+    \item \textbf{Code Signing}: Certificados de desarrollo y distribución
+    \item \textbf{Environment Variables}: Configuración por entorno
+\end{itemize}
+
+\subsubsection{Optimización de Assets}
+\begin{itemize}
+    \item \textbf{Compresión de Imágenes}: WebP para Android, HEIC para iOS
+    \item \textbf{Tree Shaking}: Eliminación de código no utilizado
+    \item \textbf{Split por ABIs}: APKs específicos por arquitectura
+    \item \textbf{Bundle Analysis}: Análisis del tamaño del bundle
+\end{itemize}
+
+\subsection{CI/CD Pipeline}
+\begin{itemize}
+    \item \textbf{Plataforma}: GitHub Actions o Codemagic
+    \item \textbf{Etapas}: Test → Build → Deploy → Notify
+    \item \textbf{Artefactos}: APK para Android, IPA para iOS
+    \item \textbf{Environments}: Development, Staging, Production
+\end{itemize}
+
+\subsection{Distribución en App Stores}
+
+\subsubsection{Google Play Store}
+\begin{itemize}
+    \item \textbf{Store Listing}: Descripción, screenshots, videos
+    \item \textbf{Content Rating}: Clasificación por edades
+    \item \textbf{Pricing}: Aplicación gratuita
+    \item \textbf{Release Tracks}: Internal → Alpha → Beta → Production
+\end{itemize}
+
+\subsubsection{Apple App Store}
+\begin{itemize}
+    \item \textbf{App Store Connect}: Metadata y gestión
+    \item \textbf{Review Guidelines}: Cumplimiento de políticas Apple
+    \item \textbf{TestFlight}: Distribución para testers
+    \item \textbf{App Review}: Proceso de aprobación
+\end{itemize}
+
+\subsubsection{Distribución Interna}
+\begin{itemize}
+    \item \textbf{Firebase App Distribution}: Para testers Android/iOS
+    \item \textbf{Diawi}: Distribución directa via link
+    \item \textbf{Enterprise Distribution}: Para dispositivos corporativos
+\end{itemize}
+
+\section{Testing y Calidad}
+\label{sec:testing}
+
+\subsection{Estrategia de Testing}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|c|}
+\hline
+\textbf{Tipo} & \textbf{Alcance} & \textbf{Cobertura Objetivo} \\
+\hline
+Unit Tests & Lógica de negocio y utils & 80\% \\
+\hline
+Widget Tests & Componentes UI críticos & 70\% \\
+\hline
+Integration Tests & Flujos completos de usuario & 60\% \\
+\hline
+Golden Tests & Comparación visual de widgets & Componentes base \\
+\hline
+Performance Tests & Rendimiento en dispositivos reales & Dispositivos target \\
+\hline
+\end{tabularx}
+\caption{Estrategia de testing para la aplicación móvil}
+\end{table}
+
+\subsection{Testing en Dispositivos Reales}
+\begin{itemize}
+    \item \textbf{Dispositivos Target}: Mínimo 5 dispositivos Android y 3 iOS
+    \item \textbf{Versiones OS}: Cobertura de versiones relevantes del mercado
+    \item \textbf{Pruebas de Usabilidad}: Con miembros reales del semillero
+    \item \textbf{Pruebas de Red}: Diferentes condiciones de conectividad
+\end{itemize}
+
+\subsection{Automated Testing Pipeline}
+\begin{itemize}
+    \item \textbf{Pre-commit Hooks}: Análisis estático y format checking
+    \item \textbf{CI Integration}: Ejecución automática en cada PR
+    \item \textbf{Code Coverage}: Reportes automáticos de cobertura
+    \item \textbf{Performance Benchmarks}: Monitoreo de métricas clave
+\end{itemize}
+
+\section{Seguridad y Mejores Prácticas}
+\label{sec:seguridad}
+
+\subsection{Seguridad en Aplicaciones Móviles}
+
+\subsubsection{Almacenamiento Seguro}
+\begin{itemize}
+    \item \textbf{Flutter Secure Storage}: Para tokens y datos sensibles
+    \item \textbf{Keychain/Keystore}: Almacenamiento nativo seguro
+    \item \textbf{No LocalStorage}: Evitar almacenamiento inseguro
+    \item \textbf{Data Encryption}: Encriptación de datos sensibles
+\end{itemize}
+
+\subsubsection{Seguridad de Red}
+\begin{itemize}
+    \item \textbf{HTTPS Obligatorio}: Todas las comunicaciones encriptadas
+    \item \textbf{Certificate Pinning}: Para dominios críticos
+    \item \textbf{No Hardcoded Secrets}: Uso de variables de entorno
+    \item \textbf{Network Security Config}: Configuración específica Android/iOS
+\end{itemize}
+
+\subsubsection{Autenticación Segura}
+\begin{itemize}
+    \item \textbf{JWT Best Practices}: Tokens de corta duración
+    \item \textbf{Biometric Authentication}: Cuando esté disponible
+    \item \textbf{Session Management}: Timeouts automáticos
+    \item \textbf{Logout Global}: Invalidación en todos los dispositivos
+\end{itemize}
+
+\subsection{Mejores Prácticas de Desarrollo}
+
+\subsubsection{Performance}
+\begin{itemize}
+    \item \textbf{Lazy Loading}: De imágenes, listas y módulos
+    \item \textbf{Minimize Rebuilds}: Uso eficiente de estado
+    \item \textbf{Memory Management}: Dispose de controllers y listeners
+    \item \textbf{Battery Optimization}: Background tasks limitadas
+\end{itemize}
+
+\subsubsection{Accesibilidad}
+\begin{itemize}
+    \item \textbf{Semantic Labels}: Para lectores de pantalla
+    \item \textbf{Font Scaling}: Soporte para tamaño de texto del sistema
+    \item \textbf{Color Contrast}: Ratios mínimos WCAG 2.1
+    \item \textbf{Touch Targets}: Tamaños mínimos para interacción
+\end{itemize}
+
+\subsubsection{Internationalization}
+\begin{itemize}
+    \item \textbf{Multi-language Support}: Español e inglés inicialmente
+    \item \textbf{Localization}: Fechas, números y formatos regionales
+    \item \textbf{RTL Support}: Soporte para direcciones de texto
+\end{itemize}
+
+\section{Mantenimiento y Operaciones}
+\label{sec:mantenimiento}
+
+\subsection{Monitoreo en Producción}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Métrica} & \textbf{Objetivo} \\
+\hline
+Crash-free Users & > 99\% \\
+\hline
+App Launch Time & < 3 segundos \\
+\hline
+Frame Rate & 60 FPS consistentes \\
+\hline
+API Response Time & < 2 segundos \\
+\hline
+Battery Impact & < 10\% por hora de uso \\
+\hline
+Memory Usage & < 150MB promedio \\
+\hline
+\end{tabularx}
+\caption{Métricas de monitoreo en producción}
+\end{table}
+
+\subsection{Actualizaciones y Versionado}
+\begin{itemize}
+    \item \textbf{Semantic Versioning}: MAJOR.MINOR.PATCH
+    \item \textbf{Release Notes}: Detalladas para cada versión
+    \item \textbf{Rollback Strategy}: Plan para reversión rápida
+    \item \textbf{Feature Flags}: Para lanzamientos progresivos
+\end{itemize}
+
+\subsection{Soporte y Mantenimiento}
+\begin{itemize}
+    \item \textbf{Issue Tracking}: Sistema centralizado de tickets
+    \item \textbf{User Feedback}: Mecanismos integrados de feedback
+    \item \textbf{Response Time}: < 24 horas para issues críticos
+    \item \textbf{Documentation}: Mantenimiento de documentación actualizada
+\end{itemize}
+
+\section{Conclusión y Siguientes Pasos}
+\label{sec:conclusion}
+
+\subsection{Resumen del Proyecto}
+La aplicación móvil Flutter para el Semillero XAE completa el ecosistema digital del semillero, proporcionando una experiencia nativa optimizada para dispositivos móviles que mantiene coherencia total con la versión web en diseño y funcionalidades, mientras aprovecha las capacidades específicas de los dispositivos móviles.
+
+\subsection{Próximos Pasos Inmediatos}
+\begin{enumerate}
+    \item Aprobación de la especificación técnica
+    \item Setup del repositorio y estructura inicial
+    \item Configuración de entornos de desarrollo
+    \item Desarrollo de componentes base
+    \item Integración con APIs del servidor
+    \item Implementación de módulos principales
+\end{enumerate}
+
+\subsection{Métricas de Éxito}
+\begin{itemize}
+    \item \textbf{Adopción}: 80\% de miembros activos usando la app regularmente
+    \item \textbf{Satisfacción}: 4+ estrellas en app stores
+    \item \textbf{Performance}: Crash-free users > 99\%
+    \item \textbf{Engagement}: > 5 minutos por sesión promedio
+    \item \textbf{Retención}: > 40\% a 30 días
+\end{itemize}
+
+\subsection{Compromisos del Equipo}
+El equipo de desarrollo se compromete a entregar una aplicación móvil de alta calidad que cumpla con todos los requisitos especificados, manteniendo coherencia con el ecosistema existente del Semillero XAE y siguiendo las mejores prácticas de desarrollo móvil con Flutter.
+
+\end{document}
