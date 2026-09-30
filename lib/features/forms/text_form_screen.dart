@@ -8,6 +8,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/date_format.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/entities/form_field_def.dart';
 import 'bloc/forms_bloc.dart';
@@ -72,17 +73,26 @@ class TextFormScreen extends StatelessWidget {
     required this.formType,
     required this.title,
     required this.fields,
+    this.submittedAt,
   });
 
   final String formType;
   final String title;
   final List<FormFieldConfig> fields;
 
+  /// Si no es null, el usuario ya envió este formulario en el periodo actual;
+  /// se bloquea el envío y se muestra la fecha del envío.
+  final DateTime? submittedAt;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<FormsBloc>(
       create: (_) => GetIt.I<FormsBloc>(),
-      child: _TextFormView(formType: formType, title: title, fields: fields),
+      child: _TextFormView(
+          formType: formType,
+          title: title,
+          fields: fields,
+          submittedAt: submittedAt),
     );
   }
 }
@@ -92,11 +102,13 @@ class _TextFormView extends StatefulWidget {
     required this.formType,
     required this.title,
     required this.fields,
+    this.submittedAt,
   });
 
   final String formType;
   final String title;
   final List<FormFieldConfig> fields;
+  final DateTime? submittedAt;
 
   @override
   State<_TextFormView> createState() => _TextFormViewState();
@@ -243,30 +255,34 @@ class _TextFormViewState extends State<_TextFormView> {
         },
         builder: (context, state) {
           final sending = state is FormsUploading;
+          final alreadySubmitted = widget.submittedAt != null;
+          final disabled = sending || alreadySubmitted;
           return Column(
             children: [
+              if (alreadySubmitted) _AlreadySubmittedBanner(at: widget.submittedAt!),
               Expanded(
                 child: ListView(
                   children: [
                     const SizedBox(height: 4),
                     for (var i = 0; i < widget.fields.length; i++)
-                      _buildField(widget.fields[i], i, enabled: !sending),
+                      _buildField(widget.fields[i], i, enabled: !disabled),
                   ],
                 ),
               ),
               const SizedBox(height: 8),
-              sending
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(),
-                    )
-                  : AppButton(
-                      label: 'Enviar',
-                      onPressed: _submit,
-                      fullWidth: true,
-                      glow: true,
-                      icon: Icons.send,
-                    ),
+              if (sending)
+                const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(),
+                )
+              else
+                AppButton(
+                  label: alreadySubmitted ? 'Ya enviado' : 'Enviar',
+                  onPressed: alreadySubmitted ? null : _submit,
+                  fullWidth: true,
+                  glow: !alreadySubmitted,
+                  icon: alreadySubmitted ? Icons.check : Icons.send,
+                ),
               const SizedBox(height: 8),
             ],
           );
@@ -407,6 +423,39 @@ class _TextFormViewState extends State<_TextFormView> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Aviso superior cuando el usuario ya envió el formulario en el periodo actual.
+class _AlreadySubmittedBanner extends StatelessWidget {
+  const _AlreadySubmittedBanner({required this.at});
+
+  final DateTime at;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.success),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_outline,
+              color: AppColors.success, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Ya enviaste este formulario el ${formatDateTime(at)}.',
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

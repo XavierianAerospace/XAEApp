@@ -93,9 +93,39 @@ abstract class ApiService {
   Future<Map<String, dynamic>> createFormTextSubmission(
       Map<String, dynamic> submission);
 
+  /// Registra en una sola operación atómica varios archivos de un mismo envío
+  /// (todos comparten `envio_id`). Devuelve los registros creados.
+  Future<List<Map<String, dynamic>>> createFormFileSubmissions(
+      List<Map<String, dynamic>> submissions);
+
   /// Genera una URL firmada temporal para descargar/ver un archivo del bucket
   /// `form-files` a partir de su `storage_path`.
   Future<String> createSignedFormFileUrl(String storagePath);
+
+  /// Borra archivos del bucket `form-files` (limpieza best-effort de huérfanos).
+  Future<void> removeFormFiles(List<String> storagePaths);
+
+  /// Lista los envíos de texto de un tipo de formulario (el alcance lo decide
+  /// la RLS: propios o todos si es superuser).
+  Future<List<Map<String, dynamic>>> getFormTextSubmissions(String formType);
+
+  /// Envíos de texto del usuario autenticado (para estado propio).
+  Future<List<Map<String, dynamic>>> getMyFormTextSubmissions();
+
+  /// Envíos de archivos del usuario autenticado (para estado propio).
+  Future<List<Map<String, dynamic>>> getMyFormFileSubmissions();
+
+  // ============ Periodos de formularios ============
+
+  /// Lista todos los periodos (`form_periods`).
+  Future<List<Map<String, dynamic>>> getFormPeriods();
+
+  /// Crea o actualiza un periodo (frecuencia). No modifica `reset_at`.
+  Future<void> upsertFormPeriod(Map<String, dynamic> row);
+
+  /// Resetea (mueve `reset_at` a now()) un formulario. Si [sectionKey] es null,
+  /// resetea todas las secciones. Solo superuser (validado en la BD).
+  Future<void> resetFormPeriod(String formType, String? sectionKey);
 
   // ============ Formularios modulares (definiciones) ============
 

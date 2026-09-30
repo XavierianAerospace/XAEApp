@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/uuid.dart';
 import '../../../domain/repositories/forms_repository.dart';
+import '../forms_status.dart';
 import 'forms_event.dart';
 import 'forms_state.dart';
 
@@ -17,7 +19,16 @@ class FormsBloc extends Bloc<FormsEvent, FormsState> {
     Emitter<FormsState> emit,
   ) async {
     emit(const FormsUploading());
+    final uploadedPaths = <String>[];
     try {
+      // Verifica el estado ANTES de subir para no dejar archivos huérfanos.
+      final status = await loadMyFormsStatus(formsRepository);
+      if (status.isDynamicSubmitted(event.formKey)) {
+        emit(const FormsError(
+            message: 'Ya enviaste este formulario en el periodo actual.'));
+        return;
+      }
+
       final answers = Map<String, dynamic>.from(event.answers);
       for (final f in event.files) {
         final ref = await formsRepository.uploadFieldFile(
@@ -26,6 +37,8 @@ class FormsBloc extends Bloc<FormsEvent, FormsState> {
           fileName: f.fileName,
           bytes: f.bytes,
         );
+        final path = ref['storage_path'];
+        if (path != null) uploadedPaths.add(path);
         answers[f.fieldKey] = ref;
       }
       await formsRepository.submitText(
@@ -33,7 +46,11 @@ class FormsBloc extends Bloc<FormsEvent, FormsState> {
         answers: answers,
       );
       emit(const FormsSuccess(message: 'Formulario enviado correctamente.'));
+    } on FormAlreadySubmittedException catch (e) {
+      await formsRepository.removeFiles(uploadedPaths);
+      emit(FormsError(message: e.message));
     } catch (e) {
+      await formsRepository.removeFiles(uploadedPaths);
       emit(FormsError(message: 'Error al enviar el formulario: ${e.toString()}'));
     }
   }
@@ -50,16 +67,43 @@ class FormsBloc extends Bloc<FormsEvent, FormsState> {
     emit(const FormsUploading());
 
     try {
-      for (final file in event.files) {
-        await formsRepository.submitFile(
-          formType: event.formType,
-          sectionKey: file.sectionKey,
-          fileName: file.fileName,
-          bytes: file.bytes,
-        );
+      final status = await loadMyFormsStatus(formsRepository);
+
+      // Agrupa los archivos por sección; cada sección es un envío (envio_id).
+      final bySection = <String, List<FileToUpload>>{};
+      for (final f in event.files) {
+        bySection
+            .putIfAbsent(f.sectionKey, () => <FileToUpload>[])
+            .add(FileToUpload(fileName: f.fileName, bytes: f.bytes));
       }
-      emit(FormsSuccess(
-          message: 'Se subieron ${event.files.length} archivo(s).'));
+
+      var uploaded = 0;
+      var skipped = 0;
+      for (final entry in bySection.entries) {
+        if (status.isDocSectionSubmitted(entry.key)) {
+          skipped++;
+          continue;
+        }
+        await formsRepository.submitFileBatch(
+          formType: event.formType,
+          sectionKey: entry.key,
+          envioId: generateUuidV4(),
+          files: entry.value,
+        );
+        uploaded += entry.value.length;
+      }
+
+      if (uploaded == 0) {
+        emit(const FormsError(
+            message: 'Esas secciones ya fueron enviadas en el periodo actual.'));
+        return;
+      }
+      final note = skipped > 0
+          ? ' ($skipped sección(es) ya enviada(s) se omitieron).'
+          : '';
+      emit(FormsSuccess(message: 'Se subieron $uploaded archivo(s).$note'));
+    } on FormAlreadySubmittedException catch (e) {
+      emit(FormsError(message: e.message));
     } catch (e) {
       emit(FormsError(message: 'Error al subir archivos: ${e.toString()}'));
     }
@@ -77,6 +121,8 @@ class FormsBloc extends Bloc<FormsEvent, FormsState> {
         answers: event.answers,
       );
       emit(const FormsSuccess(message: 'Reporte enviado correctamente.'));
+    } on FormAlreadySubmittedException catch (e) {
+      emit(FormsError(message: e.message));
     } catch (e) {
       emit(FormsError(message: 'Error al enviar el reporte: ${e.toString()}'));
     }

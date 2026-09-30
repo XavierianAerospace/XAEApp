@@ -8,10 +8,13 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/date_format.dart';
 import '../../core/widgets/widgets.dart';
+import '../../domain/repositories/forms_repository.dart';
 import 'bloc/forms_bloc.dart';
 import 'bloc/forms_event.dart';
 import 'bloc/forms_state.dart';
+import 'forms_status.dart';
 
 /// Configuración estática de cada sección del formulario.
 class _SectionConfig {
@@ -95,10 +98,32 @@ class _DocumentManagementFormView extends StatefulWidget {
 
 class _DocumentManagementFormViewState
     extends State<_DocumentManagementFormView> {
+  final FormsRepository _repo = GetIt.I<FormsRepository>();
+
   /// Archivos seleccionados por sección (key → lista de archivos).
   final Map<String, List<PlatformFile>> _selected = {
     for (final s in _sections) s.key: <PlatformFile>[],
   };
+
+  /// Estado de envíos del usuario en el periodo actual (opcional).
+  MyFormsStatus? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    try {
+      final status = await loadMyFormsStatus(_repo);
+      if (!mounted) return;
+      setState(() => _status = status);
+    } catch (_) {
+      // El estado es opcional: si falla, se permite seleccionar/enviar y la BD
+      // sigue bloqueando el reenvío.
+    }
+  }
 
   Future<void> _pickFiles(_SectionConfig section) async {
     final result = await FilePicker.platform.pickFiles(
@@ -208,16 +233,21 @@ class _DocumentManagementFormViewState
                   children: [
                     const SizedBox(height: 4),
                     for (var i = 0; i < _sections.length; i++) ...[
-                      _SectionCard(
-                        section: _sections[i],
-                        files: _selected[_sections[i].key]!,
-                        onPick: uploading
-                            ? null
-                            : () => _pickFiles(_sections[i]),
-                        onRemove: uploading
-                            ? null
-                            : (f) => _removeFile(_sections[i].key, f),
-                      ).fadeInUp(
+                      Builder(builder: (_) {
+                        final submittedAt =
+                            _status?.docSectionSubmittedAt(_sections[i].key);
+                        return _SectionCard(
+                          section: _sections[i],
+                          files: _selected[_sections[i].key]!,
+                          submittedAt: submittedAt,
+                          onPick: uploading || submittedAt != null
+                              ? null
+                              : () => _pickFiles(_sections[i]),
+                          onRemove: uploading || submittedAt != null
+                              ? null
+                              : (f) => _removeFile(_sections[i].key, f),
+                        );
+                      }).fadeInUp(
                         delay: Duration(milliseconds: 60 * i),
                       ),
                       const SizedBox(height: 16),
@@ -253,6 +283,7 @@ class _SectionCard extends StatelessWidget {
     required this.files,
     required this.onPick,
     required this.onRemove,
+    this.submittedAt,
   });
 
   final _SectionConfig section;
@@ -260,20 +291,49 @@ class _SectionCard extends StatelessWidget {
   final VoidCallback? onPick;
   final void Function(PlatformFile)? onRemove;
 
+  /// Si no es null, esta sección ya fue enviada en el periodo actual.
+  final DateTime? submittedAt;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final submitted = submittedAt != null;
 
     return AppCard(
+      borderColor: submitted ? AppColors.success : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(section.title,
-              style: textTheme.titleLarge
-                  ?.copyWith(color: AppColors.primaryAccent)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(section.title,
+                    style: textTheme.titleLarge
+                        ?.copyWith(color: AppColors.primaryAccent)),
+              ),
+              if (submitted)
+                const Icon(Icons.check_circle,
+                    color: AppColors.success, size: 20),
+            ],
+          ),
           const SizedBox(height: 4),
           Text(section.subtitle, style: textTheme.bodySmall),
           const SizedBox(height: 10),
+          if (submitted) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppColors.success),
+              ),
+              child: Text(
+                'Ya enviado el ${formatDateTime(submittedAt!)}.',
+                style: const TextStyle(
+                    color: AppColors.success, fontSize: 13),
+              ),
+            ),
+          ] else ...[
           ...section.docs.map(
             (d) => Padding(
               padding: const EdgeInsets.only(bottom: 4),
@@ -340,6 +400,7 @@ class _SectionCard extends StatelessWidget {
               files.isEmpty ? 'Seleccionar archivo(s)' : 'Agregar otro',
             ),
           ),
+          ],
         ],
       ),
     );

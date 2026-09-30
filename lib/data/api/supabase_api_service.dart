@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/repositories/forms_repository.dart' show FormAlreadySubmittedException;
 import '../api_service.dart';
 
 /// Implementación del [ApiService] usando el cliente postgrest de Supabase.
@@ -17,6 +18,21 @@ class SupabaseApiService implements ApiService {
 
   List<Map<String, dynamic>> _asList(dynamic data) =>
       (data as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
+  /// Si el error es el rechazo del trigger anti-reenvío ('DUPLICADO: ...'),
+  /// lo traduce a una excepción de dominio con mensaje amigable. Si no, no hace
+  /// nada (el que llama debe `rethrow`).
+  void _translateDuplicate(Object e) {
+    if (e is PostgrestException && e.message.startsWith('DUPLICADO')) {
+      var msg = e.message.replaceFirst('DUPLICADO:', '').trim();
+      if (msg.isEmpty) {
+        msg = 'Ya enviaste este formulario en el periodo actual.';
+      } else {
+        msg = msg[0].toUpperCase() + msg.substring(1);
+      }
+      throw FormAlreadySubmittedException(msg);
+    }
+  }
 
   @override
   Future<Map<String, dynamic>?> signInWithPassword(
@@ -316,7 +332,41 @@ class SupabaseApiService implements ApiService {
       return Map<String, dynamic>.from(data);
     } catch (e) {
       print('Error al registrar archivo de formulario: $e');
+      _translateDuplicate(e);
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> createFormFileSubmissions(
+      List<Map<String, dynamic>> submissions) async {
+    try {
+      // El id (identidad) y user_auth_id (default auth.uid()) los pone el backend.
+      final payload = submissions
+          .map((s) => Map<String, dynamic>.from(s)
+            ..remove('id')
+            ..remove('user_auth_id'))
+          .toList();
+      final data = await _client
+          .from('form_file_submissions')
+          .insert(payload)
+          .select();
+      return _asList(data);
+    } catch (e) {
+      print('Error al registrar archivos de formulario: $e');
+      _translateDuplicate(e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> removeFormFiles(List<String> storagePaths) async {
+    if (storagePaths.isEmpty) return;
+    try {
+      await _client.storage.from(_formsBucket).remove(storagePaths);
+    } catch (e) {
+      // Limpieza best-effort: no interrumpe el flujo si falla.
+      print('Error al borrar archivos huérfanos: $e');
     }
   }
 
@@ -331,7 +381,7 @@ class SupabaseApiService implements ApiService {
       return _asList(data);
     } catch (e) {
       print('Error al obtener archivos de formulario: $e');
-      return [];
+      rethrow;
     }
   }
 
@@ -351,8 +401,80 @@ class SupabaseApiService implements ApiService {
       return Map<String, dynamic>.from(data);
     } catch (e) {
       print('Error al registrar respuestas de formulario: $e');
+      _translateDuplicate(e);
       rethrow;
     }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getFormTextSubmissions(
+      String formType) async {
+    try {
+      final data = await _client
+          .from('form_text_submissions')
+          .select()
+          .eq('form_type', formType);
+      return _asList(data);
+    } catch (e) {
+      print('Error al obtener envíos de formulario: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyFormTextSubmissions() async {
+    final uid = currentAuthUserId();
+    if (uid == null) return [];
+    try {
+      final data = await _client
+          .from('form_text_submissions')
+          .select()
+          .eq('user_auth_id', uid);
+      return _asList(data);
+    } catch (e) {
+      print('Error al obtener mis envíos de texto: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyFormFileSubmissions() async {
+    final uid = currentAuthUserId();
+    if (uid == null) return [];
+    try {
+      final data = await _client
+          .from('form_file_submissions')
+          .select()
+          .eq('user_auth_id', uid);
+      return _asList(data);
+    } catch (e) {
+      print('Error al obtener mis envíos de archivos: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getFormPeriods() async {
+    try {
+      final data = await _client.from('form_periods').select();
+      return _asList(data);
+    } catch (e) {
+      print('Error al obtener periodos: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> upsertFormPeriod(Map<String, dynamic> row) async {
+    await _client.from('form_periods').upsert(row);
+  }
+
+  @override
+  Future<void> resetFormPeriod(String formType, String? sectionKey) async {
+    await _client.rpc('reset_form_period', params: {
+      'p_form_type': formType,
+      if (sectionKey != null) 'p_section_key': sectionKey,
+    });
   }
 
   @override

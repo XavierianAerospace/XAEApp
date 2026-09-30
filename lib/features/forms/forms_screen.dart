@@ -11,6 +11,7 @@ import '../auth/bloc/auth_bloc.dart';
 import '../auth/bloc/auth_state.dart';
 import 'dynamic_form_screen.dart';
 import 'forms_admin_screen.dart';
+import 'forms_status.dart';
 
 /// Lista de formularios disponibles. La "Gestión Documental" es una tarjeta
 /// especial (flujo de archivos por secciones); el resto se cargan desde la BD.
@@ -25,6 +26,7 @@ class _FormsScreenState extends State<FormsScreen> {
   final FormsRepository _repo = GetIt.I<FormsRepository>();
 
   List<FormDefinition>? _forms;
+  MyFormsStatus? _status;
   String? _error;
 
   @override
@@ -40,8 +42,18 @@ class _FormsScreenState extends State<FormsScreen> {
     });
     try {
       final forms = await _repo.getForms();
+      // El estado (marcas "Enviado") es opcional: si falla, no bloquea la lista.
+      MyFormsStatus? status;
+      try {
+        status = await loadMyFormsStatus(_repo);
+      } catch (_) {
+        status = null;
+      }
       if (!mounted) return;
-      setState(() => _forms = forms.where((f) => f.activo).toList());
+      setState(() {
+        _forms = forms.where((f) => f.activo).toList();
+        _status = status;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -91,7 +103,10 @@ class _FormsScreenState extends State<FormsScreen> {
               description: 'Sube los documentos del semillero (metas, reportes, '
                   'fichas e informes).',
               icon: Icons.folder_copy_outlined,
-              onTap: () => context.pushNamed('documentManagementForm'),
+              onTap: () async {
+                await context.pushNamed('documentManagementForm');
+                _load();
+              },
             ).fadeInUp(),
             const SizedBox(height: 16),
             if (_error != null)
@@ -112,11 +127,16 @@ class _FormsScreenState extends State<FormsScreen> {
                   title: _forms![i].title,
                   description: _forms![i].description,
                   icon: Icons.assignment_outlined,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => DynamicFormScreen(form: _forms![i]),
-                    ),
-                  ),
+                  submitted:
+                      _status?.isDynamicSubmitted(_forms![i].key) ?? false,
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => DynamicFormScreen(form: _forms![i]),
+                      ),
+                    );
+                    _load();
+                  },
                 ).fadeInUp(delay: Duration(milliseconds: 60 * (i + 1))),
                 const SizedBox(height: 16),
               ],
@@ -133,12 +153,14 @@ class _FormCard extends StatelessWidget {
     required this.description,
     required this.icon,
     this.onTap,
+    this.submitted = false,
   });
 
   final String title;
   final String description;
   final IconData icon;
   final VoidCallback? onTap;
+  final bool submitted;
 
   @override
   Widget build(BuildContext context) {
@@ -155,11 +177,18 @@ class _FormCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: textTheme.titleLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: textTheme.titleLarge?.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (submitted) const _SubmittedChip(),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Text(description, style: textTheme.bodySmall),
@@ -168,6 +197,32 @@ class _FormCard extends StatelessWidget {
           ),
           const Icon(Icons.chevron_right, color: AppColors.primaryAccent),
         ],
+      ),
+    );
+  }
+}
+
+/// Etiqueta "ENVIADO" para formularios ya enviados en el periodo actual.
+class _SubmittedChip extends StatelessWidget {
+  const _SubmittedChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.success),
+      ),
+      child: const Text(
+        'ENVIADO',
+        style: TextStyle(
+          color: AppColors.success,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }

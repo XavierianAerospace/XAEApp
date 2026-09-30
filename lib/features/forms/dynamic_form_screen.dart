@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/widgets.dart';
 import '../../domain/entities/form_definition.dart';
 import '../../domain/repositories/forms_repository.dart';
+import 'forms_status.dart';
 import 'text_form_screen.dart';
 
 /// Carga los campos de un formulario (definido en la BD) y los renderiza con
@@ -22,6 +23,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
   final FormsRepository _repo = GetIt.I<FormsRepository>();
 
   List<FormFieldConfig>? _fields;
+  DateTime? _submittedAt;
   String? _error;
 
   @override
@@ -33,9 +35,17 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
   Future<void> _load() async {
     try {
       final defs = await _repo.getFormFields(widget.form.id);
+      DateTime? submittedAt;
+      try {
+        final status = await loadMyFormsStatus(_repo);
+        submittedAt = status.dynamicSubmittedAt(widget.form.key);
+      } catch (_) {
+        submittedAt = null;
+      }
       if (!mounted) return;
       setState(() {
         _fields = defs.map(FormFieldConfig.fromDef).toList();
+        _submittedAt = submittedAt;
       });
     } catch (e) {
       if (!mounted) return;
@@ -70,6 +80,7 @@ class _DynamicFormScreenState extends State<DynamicFormScreen> {
       formType: widget.form.key,
       title: widget.form.title.toUpperCase(),
       fields: fields,
+      submittedAt: _submittedAt,
     );
   }
 }

@@ -12,6 +12,10 @@ class FormFileSubmission extends Equatable {
   final String storagePath;
   final String uploadedAt;
 
+  /// Identificador de envío: agrupa varios archivos subidos en una sola acción.
+  /// Nulo en filas anteriores a esta funcionalidad.
+  final String? envioId;
+
   const FormFileSubmission({
     required this.id,
     required this.userAuthId,
@@ -20,6 +24,7 @@ class FormFileSubmission extends Equatable {
     required this.fileName,
     required this.storagePath,
     required this.uploadedAt,
+    this.envioId,
   });
 
   factory FormFileSubmission.fromJson(Map<String, dynamic> json) {
@@ -33,6 +38,7 @@ class FormFileSubmission extends Equatable {
       fileName: json['file_name'] as String? ?? '',
       storagePath: json['storage_path'] as String? ?? '',
       uploadedAt: json['uploaded_at'] as String? ?? '',
+      envioId: json['envio_id'] as String?,
     );
   }
 
@@ -45,6 +51,7 @@ class FormFileSubmission extends Equatable {
       'file_name': fileName,
       'storage_path': storagePath,
       'uploaded_at': uploadedAt,
+      'envio_id': envioId,
     };
   }
 
