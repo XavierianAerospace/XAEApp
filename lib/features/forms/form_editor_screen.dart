@@ -25,6 +25,13 @@ const _typeLabels = <String, String>{
   'archivo': 'Archivo',
 };
 
+const _frecuenciaLabels = <String, String>{
+  'ninguna': 'Ninguna (reset manual)',
+  'semanal': 'Semanal (lunes)',
+  'mensual': 'Mensual (día 1)',
+  'semestral': 'Semestral (reset manual)',
+};
+
 String _slug(String s) {
   final base = s
       .toLowerCase()
@@ -46,6 +53,7 @@ class _FormEditorScreenState extends State<FormEditorScreen> {
   late final TextEditingController _keyCtrl;
   late final TextEditingController _descCtrl;
   bool _activo = true;
+  String _frecuencia = 'ninguna';
 
   FormDefinition? _form;
   List<FormFieldDef> _fields = [];
@@ -60,7 +68,20 @@ class _FormEditorScreenState extends State<FormEditorScreen> {
     _keyCtrl = TextEditingController(text: _form?.key ?? '');
     _descCtrl = TextEditingController(text: _form?.description ?? '');
     _activo = _form?.activo ?? true;
-    if (_form != null) _loadFields();
+    if (_form != null) {
+      _loadFields();
+      _loadFrequency();
+    }
+  }
+
+  Future<void> _loadFrequency() async {
+    try {
+      final freq = await _repo.getFormFrequency(_form!.key);
+      if (!mounted) return;
+      setState(() => _frecuencia = freq);
+    } catch (_) {
+      // Si falla, se queda con el valor por defecto ('ninguna').
+    }
   }
 
   @override
@@ -114,6 +135,7 @@ class _FormEditorScreenState extends State<FormEditorScreen> {
           activo: _activo,
           orden: 0,
         ));
+        await _repo.setFormFrequency(formType: created.key, frecuencia: _frecuencia);
         if (!mounted) return;
         setState(() {
           _form = created;
@@ -128,6 +150,7 @@ class _FormEditorScreenState extends State<FormEditorScreen> {
           'description': _descCtrl.text.trim(),
           'activo': _activo,
         });
+        await _repo.setFormFrequency(formType: updated.key, frecuencia: _frecuencia);
         if (!mounted) return;
         setState(() {
           _form = updated;
@@ -337,6 +360,32 @@ class _FormEditorScreenState extends State<FormEditorScreen> {
           const SizedBox(height: 12),
           AppTextField(
               controller: _descCtrl, label: 'Descripción', maxLines: 2),
+          const SizedBox(height: 16),
+          const Text('FRECUENCIA',
+              style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  letterSpacing: 1.2)),
+          const SizedBox(height: 6),
+          DropdownButton<String>(
+            value: _frecuencia,
+            isExpanded: true,
+            dropdownColor: AppColors.cardBackground,
+            iconEnabledColor: AppColors.primaryAccent,
+            style:
+                const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            items: _frecuenciaLabels.entries
+                .map((e) =>
+                    DropdownMenuItem(value: e.key, child: Text(e.value)))
+                .toList(),
+            onChanged: (v) => setState(() => _frecuencia = v ?? 'ninguna'),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Define cada cuánto se reinicia el periodo. Mientras no se reinicie, '
+            'cada usuario solo puede enviar una vez.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             activeThumbColor: AppColors.primaryAccent,

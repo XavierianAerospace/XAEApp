@@ -6,6 +6,7 @@ import '../../core/widgets/widgets.dart';
 import '../../domain/entities/form_definition.dart';
 import '../../domain/repositories/forms_repository.dart';
 import 'form_editor_screen.dart';
+import 'submissions_dashboard_screen.dart';
 
 /// Lista de administración de formularios (solo superuser): crear, editar y
 /// eliminar formularios configurables.
@@ -99,6 +100,17 @@ class _FormsAdminScreenState extends State<FormsAdminScreen> {
         icon: const Icon(Icons.arrow_back, color: AppColors.primaryAccent),
         onPressed: () => Navigator.of(context).pop(),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.fact_check_outlined,
+              color: AppColors.primaryAccent),
+          tooltip: 'Ver quién ha enviado',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) => const SubmissionsDashboardScreen()),
+          ),
+        ),
+      ],
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primaryAccent,
         foregroundColor: AppColors.background,
